@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Performance Review · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#181c27;--surface2:#1e2330;--surface3:#242838;
+  --border:#2a2f42;--border2:#333850;--text:#e8eaf0;--text2:#8b90a8;--text3:#555d7a;
+  --accent:#6c8cff;--accent-bg:rgba(108,140,255,0.1);
+  --green:#3ecf8e;--green-bg:rgba(62,207,142,0.1);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.1);
+  --red:#f87171;--red-bg:rgba(248,113,113,0.1);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,0.1);
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+  --radius:8px;--sidebar:240px;
+}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.sidebar-logo{padding:20px 16px 12px;border-bottom:1px solid var(--border)}
+.sidebar-logo .logo-mark{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.sidebar-logo .logo-mark .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.sidebar-logo .logo-mark span{font-size:13px;font-weight:600;letter-spacing:0.03em}
+.sidebar-logo .logo-sub{font-size:11px;color:var(--text3);padding-left:16px}
+.sidebar-nav{padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--text3);padding:8px 8px 4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;transition:all 0.15s;border:1px solid transparent}
+.nav-item i{font-size:15px;flex-shrink:0}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(108,140,255,0.2)}
+.sidebar-team{flex:1;overflow-y:auto;padding:0 8px 8px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.sidebar-team::-webkit-scrollbar{width:4px}
+.sidebar-team::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.team-member-nav{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;transition:all 0.15s;border:1px solid transparent}
+.team-member-nav:hover{background:var(--surface2);color:var(--text)}
+.team-member-nav.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(108,140,255,0.2)}
+.team-member-nav .avatar-sm{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.team-member-nav .name-trunc{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
+.add-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;border-radius:var(--radius);border:1px dashed var(--border2);background:transparent;color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all 0.15s}
+.add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.main{flex:1;overflow-y:auto;background:var(--bg);scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.main::-webkit-scrollbar{width:6px}
+.main::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.view{display:none;padding:32px;max-width:960px;margin:0 auto}
+.view.active{display:block}
+.page-header{margin-bottom:28px}
+.page-header h1{font-size:22px;font-weight:600;color:var(--text);margin-bottom:4px}
+.page-header p{font-size:13px;color:var(--text2)}
+.header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);border:1px solid;font-size:13px;font-weight:500;font-family:var(--sans);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#5a7aef;border-color:#5a7aef}
+.btn-ghost{background:transparent;border-color:var(--border2);color:var(--text2)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-danger{background:transparent;border-color:var(--border2);color:var(--red)}
+.btn-danger:hover{background:var(--red-bg);border-color:var(--red)}
+.btn-green{background:var(--green-bg);border-color:rgba(62,207,142,0.3);color:var(--green)}
+.btn-green:hover{background:rgba(62,207,142,0.2);border-color:var(--green)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{padding:5px 8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card-sm{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.member-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.member-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--purple));opacity:0;transition:opacity 0.2s}
+.member-card:hover{border-color:var(--border2);background:var(--surface2);transform:translateY(-1px)}
+.member-card:hover::before{opacity:1}
+.member-card .mc-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}
+.mc-info{flex:1;min-width:0}
+.mc-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-role{font-size:11px;color:var(--text3)}
+.mc-scores{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mc-kpi{background:var(--surface2);border-radius:6px;padding:8px 10px}
+.mc-kpi .kpi-label{font-size:10px;color:var(--text3);margin-bottom:2px}
+.mc-kpi .kpi-val{font-size:15px;font-weight:600;font-family:var(--mono)}
+.mc-footer{margin-top:12px;display:flex;align-items:center;justify-content:space-between}
+.overall-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;font-family:var(--mono);padding:4px 10px;border-radius:20px}
+.progress-bar{height:3px;background:var(--surface3);border-radius:2px;flex:1;margin-left:12px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
+.empty-state .empty-icon{width:56px;height:56px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text3);margin-bottom:16px}
+.empty-state h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.empty-state p{font-size:13px;color:var(--text2);max-width:300px;margin-bottom:20px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;backdrop-filter:blur(3px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;scrollbar-width:thin}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.modal-header h3{font-size:16px;font-weight:600}
+.modal-close{background:transparent;border:none;color:var(--text2);cursor:pointer;font-size:18px;display:flex;align-items:center}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:20px}
+.modal-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;display:block}
+.form-input{width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;font-family:var(--sans);transition:border-color 0.15s;outline:none}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+.member-detail-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;padding:18px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.avatar-lg{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;flex-shrink:0}
+.mh-info h2{font-size:18px;font-weight:600;margin-bottom:2px}
+.mh-info .mh-meta{font-size:12px;color:var(--text3);display:flex;gap:12px;flex-wrap:wrap}
+.mh-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.score-label-sm{font-size:11px;color:var(--text3)}
+.cp-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap}
+.cp-bar-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;flex-shrink:0}
+.cp-pills{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.cp-pill{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);color:var(--text2);background:transparent;transition:all 0.15s;font-family:var(--sans)}
+.cp-pill:hover{border-color:var(--accent);color:var(--accent)}
+.cp-pill.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.cp-actions{display:flex;gap:6px;flex-shrink:0}
+.tabs{display:flex;gap:2px;background:var(--surface2);border-radius:var(--radius);padding:3px;margin-bottom:20px}
+.tab{flex:1;text-align:center;padding:7px 4px;font-size:12px;font-weight:500;cursor:pointer;border-radius:6px;color:var(--text2);transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:4px}
+.tab.active{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.tab-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.cat-group{margin-bottom:18px}
+.cat-title{font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.score-row{display:grid;grid-template-columns:1fr 160px 1fr;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.score-row:last-child{border-bottom:none}
+.score-dots{display:flex;gap:4px}
+.sdot{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:var(--mono);cursor:pointer;transition:all 0.15s;color:var(--text3)}
+.sdot:hover{border-color:var(--accent);color:var(--accent)}
+.sdot.s1.sel{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.sdot.s2.sel{background:var(--amber-bg);border-color:var(--amber);color:var(--amber)}
+.sdot.s3.sel{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.sdot.s4.sel{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.sdot.s5.sel{background:var(--purple-bg);border-color:var(--purple);color:var(--purple)}
+.notes-input{width:100%;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--sans);resize:none;height:36px;outline:none;transition:border-color 0.15s,height 0.15s}
+.notes-input:focus{border-color:var(--accent);height:60px}
+.notes-input::placeholder{color:var(--text3)}
+.kpi-input-row{display:grid;grid-template-columns:1fr 160px 1fr;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
+.kpi-input-row:last-child{border-bottom:none}
+.kpi-number-input{width:100%;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:var(--mono);font-weight:500;outline:none;transition:border-color 0.15s;text-align:center}
+.kpi-number-input:focus{border-color:var(--accent)}
+.kpi-number-input::placeholder{color:var(--text3)}
+.score-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+.progress-chart-wrap{overflow-x:auto}
+.progress-table{width:100%;border-collapse:collapse;font-size:12px;min-width:400px}
+.progress-table th{padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap}
+.progress-table th:not(:first-child){text-align:center}
+.progress-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2)}
+.progress-table td:not(:first-child){text-align:center;font-family:var(--mono);font-size:12px;font-weight:500}
+.progress-table tr:last-child td{border-bottom:none}
+.delta-up{color:var(--green)}
+.delta-dn{color:var(--red)}
+.delta-eq{color:var(--text3)}
+.setup-section{margin-bottom:28px}
+.setup-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.setup-section-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.setup-section-title i{color:var(--accent);font-size:16px}
+.setup-section-desc{font-size:12px;color:var(--text3);margin-top:2px}
+.kpi-edit-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
+.kpi-edit-num{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--accent);background:var(--accent-bg);border:1px solid rgba(108,140,255,0.2);border-radius:6px;padding:3px 7px;flex-shrink:0;margin-top:4px}
+.kpi-edit-body{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.kpi-edit-label{background:transparent;border:none;color:var(--text);font-size:13px;font-weight:500;font-family:var(--sans);outline:none;width:100%}
+.kpi-edit-label::placeholder{color:var(--text3)}
+.kpi-edit-hint{background:transparent;border:none;color:var(--text3);font-size:11px;font-family:var(--sans);outline:none;width:100%}
+.kpi-edit-hint::placeholder{color:var(--text3)}
+.kpi-edit-target{width:68px;flex-shrink:0;padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--amber);font-size:11px;font-family:var(--mono);outline:none;text-align:center;margin-top:2px}
+.kpi-edit-target::placeholder{color:var(--text3)}
+.kpi-edit-target:focus{border-color:var(--amber)}
+.add-kpi-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;border-radius:var(--radius);border:1px dashed var(--border2);background:transparent;color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all 0.15s}
+.add-kpi-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.kpi-table-wrap{border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.kpi-bench-table{width:100%;border-collapse:collapse;font-size:13px}
+.kpi-bench-table thead tr{background:var(--surface2)}
+.kpi-bench-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.04em;border-bottom:1px solid var(--border);white-space:nowrap}
+.kpi-bench-table th:not(:first-child){text-align:center}
+.kpi-bench-table td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.kpi-bench-table td:not(:first-child){text-align:center}
+.kpi-bench-table tbody tr:last-child td{border-bottom:none}
+.kpi-bench-table tbody tr:hover td{background:var(--surface2)}
+.kb-name{font-size:13px;font-weight:500}
+.kb-hint{font-size:11px;color:var(--text3);margin-top:1px}
+.kb-val{font-family:var(--mono);font-size:12px;font-weight:500;background:var(--surface2);border:1px solid var(--border);padding:3px 9px;border-radius:20px;white-space:nowrap}
+.kb-na{color:var(--text3);background:transparent;border-color:transparent}
+.level-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.tp-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px}
+.tp-item.disabled{opacity:0.4}
+.tp-toggle{width:30px;height:18px;border-radius:9px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none;padding:0}
+.tp-toggle.on{background:var(--accent)}
+.tp-toggle.off{background:var(--surface3);border:1px solid var(--border2)}
+.tp-toggle::after{content:'';position:absolute;top:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left 0.2s}
+.tp-toggle.on::after{left:15px}
+.tp-toggle.off::after{left:2px}
+.tp-actions{display:flex;gap:4px;margin-left:auto}
+.cat-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-bottom:6px}
+.agenda-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.agenda-mini-item{background:var(--surface2);border-radius:var(--radius);padding:10px 12px}
+.ami-num{font-size:10px;font-family:var(--mono);font-weight:700;margin-bottom:3px}
+.ami-title{font-size:12px;font-weight:500;margin-bottom:1px}
+.ami-time{font-size:11px;color:var(--text3)}
+.sa-intro{display:flex;align-items:flex-start;gap:10px;background:var(--accent-bg);border:1px solid rgba(108,140,255,0.2);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.5}
+.sa-intro strong{color:var(--text)}
+.sa-status-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sa-progress-wrap{flex:1;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.sa-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));border-radius:2px}
+.sa-progress-label{font-size:11px;font-family:var(--mono);color:var(--text3);white-space:nowrap}
+.sa-question{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.sa-question.sa-answered{border-color:rgba(62,207,142,0.25)}
+.sa-q-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.sa-q-num{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 7px;flex-shrink:0;margin-top:1px}
+.sa-q-body{flex:1}
+.sa-q-label{font-size:13px;font-weight:500;margin-bottom:2px}
+.sa-q-hint{font-size:11px;color:var(--text3)}
+.sa-check{width:20px;height:20px;border-radius:50%;background:var(--green-bg);border:1px solid rgba(62,207,142,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sa-check i{font-size:11px;color:var(--green)}
+.sa-textarea{width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;font-family:var(--sans);resize:none;height:72px;outline:none;transition:border-color 0.15s,height 0.15s;line-height:1.6}
+.sa-textarea:focus{border-color:var(--accent);height:100px}
+.sa-textarea::placeholder{color:var(--text3)}
+/* SA DOWNLOAD CARD */
+.sa-download-card{background:var(--surface);border:1px solid rgba(108,140,255,0.3);border-radius:14px;padding:20px;margin-bottom:28px;display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden}
+.sa-download-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--purple))}
+.sa-dl-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-bg);border:1px solid rgba(108,140,255,0.2);padding:3px 10px;border-radius:20px;width:fit-content}
+.sa-dl-body{display:flex;gap:14px;align-items:flex-start}
+.sa-dl-icon{width:40px;height:40px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(108,140,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--accent);flex-shrink:0}
+.sa-dl-text{flex:1}
+.sa-dl-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
+.sa-dl-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.sa-dl-desc strong{color:var(--text)}
+.sa-dl-questions{display:flex;flex-direction:column;gap:4px}
+.sa-dl-q{display:flex;align-items:flex-start;gap:6px;font-size:12px;color:var(--text2)}
+.sa-dl-q i{font-size:11px;color:var(--accent);margin-top:2px;flex-shrink:0}
+.agenda-timeline{display:flex;flex-direction:column}
+.ag-item{display:flex;gap:16px}
+.ag-left{display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0}
+.ag-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:var(--mono);flex-shrink:0;border:1px solid}
+.ag-line{width:1px;flex:1;min-height:12px;margin:4px 0;background:var(--border)}
+.ag-content{padding-bottom:20px;flex:1}
+.ag-title{font-size:14px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ag-time{font-size:11px;font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);padding:2px 8px;border-radius:20px;color:var(--text2)}
+.ag-tips{list-style:none;margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.ag-tips li{font-size:12px;color:var(--text2);display:flex;gap:8px}
+.ag-tips li::before{content:"›";color:var(--text3)}
+.ag-callout{border-left:2px solid var(--accent);padding:8px 12px;background:var(--accent-bg);border-radius:0 6px 6px 0;margin-top:8px;font-size:12px;color:var(--text2)}
+.ag-callout strong{color:var(--text);font-weight:600}
+.save-toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--green);border-radius:var(--radius);padding:8px 14px;font-size:12px;color:var(--green);display:none;align-items:center;gap:6px;z-index:999}
+.save-toast.show{display:flex;animation:fadeUp 0.2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* HELP PAGE */
+.help-intro{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px}
+.help-intro-inner{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.help-intro-icon{width:44px;height:44px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(108,140,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--accent);flex-shrink:0}
+.help-flow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding-top:12px;border-top:1px solid var(--border)}
+.help-flow-step{display:flex;align-items:center;gap:4px}
+.help-flow-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:var(--mono);border:1px solid}
+.help-flow-label{font-size:11px;color:var(--text2);max-width:80px;line-height:1.3}
+.help-flow-arrow{color:var(--text3);font-size:12px}
+.help-step{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.help-step-header{display:flex;align-items:center;gap:12px;padding:16px 20px 12px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.help-step-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:var(--mono);flex-shrink:0}
+.help-step-meta{flex:1}
+.help-step-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.help-step-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.help-step-body{display:grid;grid-template-columns:1fr 380px;gap:0}
+.help-step-content{padding:16px 20px;border-right:1px solid var(--border)}
+.help-screen{padding:14px;display:flex;align-items:flex-start;justify-content:center;background:var(--bg)}
+.help-svg{width:100%;max-width:380px;border-radius:8px;border:1px solid var(--border2);display:block}
+.help-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.help-desc strong{color:var(--text)}
+.help-bullets{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.help-bullets li{font-size:12px;color:var(--text2);line-height:1.5;display:flex;gap:8px}
+.help-bullets li::before{content:"›";color:var(--text3);flex-shrink:0;margin-top:1px}
+.help-bullets strong{color:var(--text)}
+.help-bullets em{color:var(--text);font-style:normal;font-weight:500}
+.help-tip{display:flex;gap:8px;background:var(--amber-bg);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.5}
+.help-tip i{color:var(--amber);font-size:14px;flex-shrink:0;margin-top:1px}
+.help-tip strong{color:var(--text)}
+.help-faq{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:8px}
+.help-faq-item{padding:10px 0;border-bottom:1px solid var(--border)}
+.help-faq-item:last-child{border-bottom:none}
+.help-faq-q{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;display:flex;align-items:flex-start;gap:8px}
+.help-faq-a{font-size:12px;color:var(--text2);line-height:1.6;padding-left:18px}
+@media(max-width:760px){.help-step-body{grid-template-columns:1fr}.help-step-content{border-right:none;border-bottom:1px solid var(--border)}.help-flow{display:none}}
+@media(max-width:640px){.sidebar{width:200px}.score-row,.kpi-input-row{grid-template-columns:1fr;gap:6px}.view{padding:16px}.agenda-mini{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.sidebar{display:none}.team-grid{grid-template-columns:1fr}.agenda-mini{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><div class="dot"></div><span>Performance Review</span></div>
+      <div class="logo-sub">Mid-year &middot; 2026</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <div class="nav-item active" id="nav-setup" onclick="showView('setup')"><i class="ti ti-home"></i> Setup</div>
+      <div class="nav-item" id="nav-dashboard" onclick="showView('dashboard')"><i class="ti ti-layout-grid"></i> Dashboard</div>
+      <div class="nav-item" id="nav-agenda" onclick="showView('agenda')"><i class="ti ti-calendar-event"></i> Meeting agenda</div>
+      <div class="nav-item" id="nav-help" onclick="showView('help')"><i class="ti ti-help-circle"></i> How to use</div>
+      <div class="nav-label" style="margin-top:8px">Team members</div>
+    </nav>
+    <div class="sidebar-team" id="sidebarTeam"></div>
+    <div class="sidebar-footer">
+      <button class="add-btn" onclick="openAddModal()"><i class="ti ti-plus"></i> Add team member</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="view active" id="view-setup">
+      <div class="page-header"><h1>Setup</h1><p>Review and customise tracked dimensions before starting evaluations</p></div>
+      <div id="setupContent"></div>
+    </div>
+    <div class="view" id="view-dashboard">
+      <div class="page-header">
+        <div class="header-row">
+          <div><h1>Team performance</h1><p id="dashSubtitle">Mid-year review &middot; 2026</p></div>
+          <button class="btn btn-primary" onclick="openAddModal()"><i class="ti ti-plus"></i> Add member</button>
+        </div>
+      </div>
+      <div id="dashContent"></div>
+    </div>
+    <div class="view" id="view-member">
+      <div class="page-header">
+        <div class="header-row">
+          <button class="btn btn-ghost btn-sm" onclick="showView('dashboard')"><i class="ti ti-arrow-left"></i> Back</button>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="navMember(-1)"><i class="ti ti-chevron-left"></i></button>
+            <span class="btn btn-ghost btn-sm" id="memberNavLabel" style="cursor:default;pointer-events:none"></span>
+            <button class="btn btn-ghost btn-sm" onclick="navMember(1)"><i class="ti ti-chevron-right"></i></button>
+            <button class="btn btn-green btn-sm" onclick="openExportModal()"><i class="ti ti-download"></i> Export</button>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer"><i class="ti ti-upload"></i> Import<input type="file" accept=".xlsx" style="display:none" onchange="importXLSX(this)"/></label>
+            <button class="btn btn-danger btn-sm" onclick="deleteMember()"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+      </div>
+      <div id="memberContent"></div>
+    </div>
+    <div class="view" id="view-agenda">
+      <div class="page-header"><h1>Meeting agenda</h1><p>60-minute structure &middot; reference before each session</p></div>
+      <div id="agendaContent"></div>
+    </div>
+    <div class="view" id="view-help">
+      <div class="page-header"><h1>How to use this app</h1><p>A step-by-step guide for managers and team leads</p></div>
+      <div id="helpContent"></div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD MEMBER MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add team member</h3><button class="modal-close" onclick="closeAddModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Full name *</label><input class="form-input" id="inp-name" placeholder="Jane Smith"/></div>
+      <div class="form-group"><label class="form-label">Team</label><input class="form-input" id="inp-team" placeholder="Unify / Flights&hellip;"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addMember()"><i class="ti ti-check"></i> Add member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CHECKPOINT MODAL -->
+<div class="modal-overlay" id="addCpModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add checkpoint</h3><button class="modal-close" onclick="closeAddCpModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Checkpoint name *</label><input class="form-input" id="inp-cp-label" placeholder="e.g. June 2026, Q3 Review&hellip;"/></div>
+      <div class="form-group">
+        <label class="form-label">Starting point</label>
+        <select class="form-input" id="inp-cp-copy">
+          <option value="blank">Start blank</option>
+          <option value="copy">Copy scores from current checkpoint</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAddCpModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addCheckpoint()"><i class="ti ti-check"></i> Add checkpoint</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TP MODAL -->
+<div class="modal-overlay" id="editTpModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="editTpTitle">Edit tracking point</h3><button class="modal-close" onclick="closeEditTp()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Label</label><input class="form-input" id="etp-label" placeholder="e.g. Communication skills"/></div>
+      <div class="form-group"><label class="form-label">Hint <span style="color:var(--text3);font-weight:400">(optional)</span></label><input class="form-input" id="etp-hint" placeholder="Short description"/></div>
+      <div class="form-group"><label class="form-label">Category</label><select class="form-input" id="etp-cat" style="cursor:pointer"></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEditTp()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditTp()"><i class="ti ti-check"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Export ratings</h3><button class="modal-close" onclick="closeExportModal()"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Exports all checkpoints for <strong id="exportMemberName" style="color:var(--text)"></strong> as an Excel file. Each checkpoint gets its own sheet.</p>
+      <div style="background:var(--surface2);border-radius:var(--radius);padding:12px;font-size:12px;color:var(--text2);display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><i class="ti ti-info-circle" style="color:var(--accent)"></i><strong style="color:var(--text)">Included in export</strong></div>
+        <div>All KPI values and tracking point scores</div>
+        <div>Notes per dimension</div>
+        <div>Overall notes per checkpoint</div>
+        <div>Self-assessment answers (separate sheet)</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeExportModal()">Cancel</button>
+      <button class="btn btn-green" onclick="doExport()"><i class="ti ti-download"></i> Download Excel</button>
+    </div>
+  </div>
+</div>
+
+<div class="save-toast" id="saveToast"><i class="ti ti-device-floppy"></i> Saved</div>
+
+<script>
+const STORAGE_KEY='perf_review_2026_v4';
+const COLORS=['#6c8cff','#3ecf8e','#f59e0b','#a78bfa','#f87171','#38bdf8','#fb923c','#34d399'];
+const SCORE_LABELS=['','Below expectations','Developing','Meets expectations','Exceeds expectations','Exceptional'];
+
+const DEFAULT_KPIS=[
+  {id:'kpi_delivery',label:'1.1 Strategic Initiatives',hint:'Delivery %',target:''},
+  {id:'kpi_est_acc',label:'1.2 Improve delivery predictability',hint:'Estimation Accuracy %',target:'Q3'},
+  {id:'kpi_quality',label:'1.3 Improve delivery quality',hint:'Quality Cycle: 1.5\u20131.75 \xb7 Defect ratio: 3\u20134%',target:'Q3'},
+];
+
+const DEFAULT_TRACKING=[
+  {cat:'Execution & craft',items:[
+    {id:'velocity',label:'Velocity & throughput',hint:'',enabled:true},
+    {id:'quality',label:'Quality of work',hint:'',enabled:true},
+    {id:'pr_review',label:'PR reviews',hint:'Count, quality & turnaround time',enabled:true},
+    {id:'post_delivery',label:'Post-delivery follow-up',hint:'',enabled:true},
+  ]},
+  {cat:'Technical & business acumen',items:[
+    {id:'creativity',label:'Creativity in problem solving',hint:'',enabled:true},
+    {id:'biz_knowledge',label:'Business domain knowledge',hint:'',enabled:true},
+    {id:'ai_adoption',label:'AI adoption',hint:'',enabled:true},
+    {id:'innovation',label:'Innovation',hint:'',enabled:true},
+  ]},
+  {cat:'Communication',items:[
+    {id:'comm_verbal',label:'Verbal communication',hint:'Clear communication with stakeholders, identifying and raising bottlenecks and edge cases',enabled:true},
+    {id:'comm_written',label:'Written communication',hint:'Timely ticket updates, clear PR reviews, updates on Jira/Slack',enabled:true},
+    {id:'presentation',label:'Presentation skills',hint:'',enabled:true},
+  ]},
+  {cat:'Collaboration & culture',items:[
+    {id:'peer_feedback',label:'Peer & cross-team feedback',hint:'PM, QA, BE feedback',enabled:true},
+    {id:'independence',label:'Independence & ownership',hint:'',enabled:true},
+    {id:'knowledge_share',label:'Knowledge sharing',hint:'Within team & across dept.',enabled:true},
+    {id:'attendance',label:'Attendance & discipline',hint:'',enabled:true},
+    {id:'growth',label:'Growth mindset',hint:'Receptiveness to feedback',enabled:true},
+  ]}
+];
+
+const SA_QUESTIONS=[
+  {id:'proud',label:'What are you most proud of from H1?',hint:'Achievements, deliveries, behaviours you want to highlight'},
+  {id:'improve',label:'Where do you feel you could have done better?',hint:'Be honest \u2014 this is a safe space for reflection'},
+  {id:'blockers',label:'What blockers or challenges impacted your work?',hint:'Technical, process, team, or personal obstacles'},
+  {id:'self_rate',label:'How would you rate your own overall performance this half?',hint:'1 = Below expectations \xb7 3 = Meets \xb7 5 = Exceptional'},
+  {id:'support',label:'What support, resources, or changes would help you in H2?',hint:'Training, tooling, processes, management support'},
+  {id:'h2_goals',label:'What are your personal goals and focus areas for H2?',hint:'Concrete outcomes you want to own or improve'},
+  {id:'other',label:"Anything else you'd like to share before this review?",hint:'Open space \u2014 team dynamics, role clarity, career direction'},
+];
+
+let state={members:[],tracking:null,kpis:null};
+let currentMemberIdx=0,currentDetailTab='scorecard',currentCpIdx=0,editTpTarget=null;
+// pending radar draw: {canvasId, catNames, catVals}
+let pendingRadar=null;
+
+// ── PERSISTENCE ──────────────────────────────────────────────────
+function load(){
+  try{
+    const d=localStorage.getItem(STORAGE_KEY);
+    if(d) state=JSON.parse(d);
+    if(!state.tracking) state.tracking=JSON.parse(JSON.stringify(DEFAULT_TRACKING));
+    if(!state.kpis)     state.kpis=JSON.parse(JSON.stringify(DEFAULT_KPIS));
+    state.members.forEach(m=>{if(!m.checkpoints) migrateToCheckpoints(m);});
+  }catch(e){
+    state={members:[],tracking:JSON.parse(JSON.stringify(DEFAULT_TRACKING)),kpis:JSON.parse(JSON.stringify(DEFAULT_KPIS))};
+  }
+}
+function migrateToCheckpoints(m){
+  const cp={id:'cp_m',label:'Mid-year 2026',date:new Date().toISOString().split('T')[0],
+    scores:m.scores||{},kpis:m.kpis||{},notes:m.notes||{},overallNotes:m.overallNotes||''};
+  m.checkpoints=[cp]; m.selfAssessment=m.selfAssessment||{};
+  delete m.scores; delete m.kpis; delete m.notes; delete m.overallNotes;
+}
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));showToast();}catch(e){}}
+function saveQuiet(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}}
+function showToast(){const t=document.getElementById('saveToast');t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function initials(n){return n.split(' ').map(p=>p[0]||'').join('').slice(0,2).toUpperCase();}
+function avatarColor(n){return COLORS[n.charCodeAt(0)%COLORS.length];}
+function uid(){return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);}
+function getEnabledTracking(){return state.tracking.map(c=>({...c,items:c.items.filter(d=>d.enabled)})).filter(c=>c.items.length>0);}
+function getAllDimensions(){return [{cat:'Formal KPIs',kpi:true,items:state.kpis},...getEnabledTracking().map(c=>({cat:c.cat,kpi:false,items:c.items}))];}
+
+function initCheckpoint(label,copyFrom){
+  const scores={},notes={},kpis={};
+  state.kpis.forEach(d=>{kpis[d.id]=copyFrom?copyFrom.kpis[d.id]||'':'';notes[d.id]='';});
+  state.tracking.forEach(cat=>cat.items.forEach(d=>{scores[d.id]=copyFrom?copyFrom.scores[d.id]||0:0;notes[d.id]='';}));
+  return {id:uid(),label,date:new Date().toISOString().split('T')[0],scores,kpis,notes,overallNotes:''};
+}
+function initMember(name,team){
+  return {id:uid(),name,team:team||'',checkpoints:[initCheckpoint('Mid-year 2026',null)],selfAssessment:{}};
+}
+function ensureMemberDims(m){
+  m.checkpoints.forEach(cp=>{
+    state.kpis.forEach(d=>{if(!(d.id in cp.kpis))cp.kpis[d.id]='';if(!(d.id in cp.notes))cp.notes[d.id]='';});
+    state.tracking.forEach(cat=>cat.items.forEach(d=>{if(!(d.id in cp.scores))cp.scores[d.id]=0;if(!(d.id in cp.notes))cp.notes[d.id]='';}));
+  });
+}
+function getCp(m){return m.checkpoints[Math.min(currentCpIdx,m.checkpoints.length-1)];}
+function getOverallScore(m,cp){
+  if(!cp)cp=getCp(m);
+  const vals=[];
+  getEnabledTracking().forEach(cat=>cat.items.forEach(d=>{if(cp.scores[d.id]>0)vals.push(cp.scores[d.id]);}));
+  return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+}
+function scoreColor(s){if(!s)return'var(--text3)';if(s>=4.5)return'#a78bfa';if(s>=3.5)return'#3ecf8e';if(s>=2.5)return'#6c8cff';if(s>=1.5)return'#f59e0b';return'#f87171';}
+function scoreBg(s){if(!s)return'var(--surface3)';if(s>=4.5)return'var(--purple-bg)';if(s>=3.5)return'var(--green-bg)';if(s>=2.5)return'var(--accent-bg)';if(s>=1.5)return'var(--amber-bg)';return'var(--red-bg)';}
+
+// ── RADAR (no inline script) ─────────────────────────────────────
+function drawRadar(canvasId,catNames,catVals){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const N=catNames.length;if(!N)return;
+  const cx=200,cy=150,r=100,step=2*Math.PI/N;
+  ctx.clearRect(0,0,400,300);
+  for(let l=1;l<=5;l++){
+    ctx.beginPath();
+    for(let i=0;i<N;i++){const a=-Math.PI/2+i*step,rr=(l/5)*r;i===0?ctx.moveTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a)):ctx.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a));}
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;ctx.stroke();
+  }
+  for(let i=0;i<N;i++){const a=-Math.PI/2+i*step;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;ctx.stroke();}
+  ctx.beginPath();
+  catVals.forEach((v,i)=>{const a=-Math.PI/2+i*step,rr=(v/5)*r;i===0?ctx.moveTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a)):ctx.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a));});
+  ctx.closePath();ctx.fillStyle='rgba(108,140,255,0.15)';ctx.fill();ctx.strokeStyle='#6c8cff';ctx.lineWidth=2;ctx.stroke();
+  catVals.forEach((v,i)=>{const a=-Math.PI/2+i*step,rr=(v/5)*r;ctx.beginPath();ctx.arc(cx+rr*Math.cos(a),cy+rr*Math.sin(a),4,0,2*Math.PI);ctx.fillStyle='#6c8cff';ctx.fill();});
+  catNames.forEach((cat,i)=>{const a=-Math.PI/2+i*step;ctx.fillStyle='rgba(139,144,168,0.9)';ctx.font='11px Inter,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(cat,cx+(r+22)*Math.cos(a),cy+(r+22)*Math.sin(a));});
+}
+
+// ── SIDEBAR ──────────────────────────────────────────────────────
+function renderSidebar(){
+  const el=document.getElementById('sidebarTeam');el.innerHTML='';
+  const inMember=document.getElementById('view-member').classList.contains('active');
+  state.members.forEach((m,i)=>{
+    const ac=avatarColor(m.name),div=document.createElement('div');
+    div.className='team-member-nav'+(inMember&&currentMemberIdx===i?' active':'');
+    div.onclick=()=>openMember(i);
+    div.innerHTML=`<div class="avatar-sm" style="background:${ac}22;color:${ac}">${initials(m.name)}</div><span class="name-trunc">${m.name}</span>`;
+    el.appendChild(div);
+  });
+}
+
+// ── SETUP ────────────────────────────────────────────────────────
+function renderSetup(){
+  const el=document.getElementById('setupContent');
+  let h=`<div class="setup-section"><div class="setup-section-header">
+    <div><div class="setup-section-title"><i class="ti ti-chart-bar"></i> Formal KPIs</div>
+    <div class="setup-section-desc">Editable goal items &mdash; actual values entered per checkpoint</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="toggleDeptKpis(this)"><i class="ti ti-building"></i> View web department KPIs for 2026</button>
+  </div>
+  <div id="deptKpiPanel" style="display:none;margin-bottom:16px">
+    <div class="kpi-table-wrap"><table class="kpi-bench-table">
+      <thead><tr><th>KPI</th>
+        <th><span class="level-badge" style="background:#6c8cff22;color:#6c8cff">Department</span></th>
+        <th><span class="level-badge" style="background:#3ecf8e22;color:#3ecf8e">Team</span></th>
+        <th><span class="level-badge" style="background:#a78bfa22;color:#a78bfa">IC</span></th>
+      </tr></thead>
+      <tbody>
+        <tr><td><div class="kb-name">Estimation accuracy</div><div class="kb-hint">Actual vs. planned</div></td><td><span class="kb-val">65&ndash;70%</span></td><td><span class="kb-val">65&ndash;70%</span></td><td><span class="kb-val">65&ndash;70%</span></td></tr>
+        <tr><td><div class="kb-name">Delivery</div><div class="kb-hint">Committed vs. completed</div></td><td><span class="kb-val">75&ndash;80%</span></td><td><span class="kb-val">80&ndash;85%</span></td><td><span class="kb-val">85&ndash;90%</span></td></tr>
+        <tr><td><div class="kb-name">Defect ratio</div><div class="kb-hint">Bugs per feature</div></td><td><span class="kb-val">2&ndash;3%</span></td><td><span class="kb-val">3&ndash;4%</span></td><td><span class="kb-val kb-na">&mdash;</span></td></tr>
+        <tr><td><div class="kb-name">QA cycle time</div><div class="kb-hint">Days dev-done to QA-pass</div></td><td><span class="kb-val">1.5&ndash;1.75</span></td><td><span class="kb-val">1.5&ndash;1.75</span></td><td><span class="kb-val">1.5&ndash;1.75</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>`;
+  state.kpis.forEach((kpi,ki)=>{
+    h+=`<div class="kpi-edit-row">
+      <div class="kpi-edit-num">${String(ki+1).padStart(2,'0')}</div>
+      <div class="kpi-edit-body">
+        <input class="kpi-edit-label" value="${kpi.label}" placeholder="KPI goal title&hellip;" oninput="setKpiMeta(${ki},'label',this.value)"/>
+        <input class="kpi-edit-hint" value="${kpi.hint||''}" placeholder="Measure of success&hellip;" oninput="setKpiMeta(${ki},'hint',this.value)"/>
+      </div>
+      <input class="kpi-edit-target" value="${kpi.target||''}" placeholder="Target" oninput="setKpiMeta(${ki},'target',this.value)"/>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="deleteKpi(${ki})"><i class="ti ti-trash" style="font-size:12px"></i></button>
+    </div>`;
+  });
+  h+=`<button class="add-kpi-btn" onclick="addKpi()"><i class="ti ti-plus"></i> Add KPI</button></div>`;
+
+  h+=`<div class="setup-section"><div class="setup-section-header"><div>
+    <div class="setup-section-title"><i class="ti ti-list-check"></i> Tracking points</div>
+    <div class="setup-section-desc">Toggle, rename, or add items &mdash; changes apply to all scorecards</div>
+  </div></div>`;
+  const catColors=['#6c8cff','#3ecf8e','#f59e0b','#a78bfa'];
+  state.tracking.forEach((cat,ci)=>{
+    const cc=catColors[ci%catColors.length];
+    h+=`<div style="margin-bottom:16px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span class="cat-badge" style="background:${cc}18;color:${cc}">${cat.cat}</span>
+      <button class="btn btn-ghost btn-sm" onclick="openAddTp(${ci})" style="font-size:11px"><i class="ti ti-plus"></i> Add</button>
+    </div>`;
+    cat.items.forEach((item,ii)=>{
+      h+=`<div class="tp-item${item.enabled?'':' disabled'}">
+        <i class="ti ti-grip-vertical" style="font-size:14px;color:var(--text3);flex-shrink:0"></i>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;color:var(--text)">${item.label}</div>
+          ${item.hint?`<div style="font-size:11px;color:var(--text3)">${item.hint}</div>`:''}
+        </div>
+        <div class="tp-actions">
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditTp(${ci},${ii})"><i class="ti ti-pencil" style="font-size:12px"></i></button>
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="deleteTp(${ci},${ii})"><i class="ti ti-trash" style="font-size:12px"></i></button>
+          <button class="tp-toggle ${item.enabled?'on':'off'}" onclick="toggleTp(${ci},${ii})"></button>
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div>`;
+
+  const agPh=[{c:'#6c8cff',t:'Opening',d:'5 min'},{c:'#3ecf8e',t:'Self-reflection',d:'10 min'},{c:'#f59e0b',t:'KPI review',d:'15 min'},{c:'#a78bfa',t:'Discussion',d:'15 min'},{c:'#38bdf8',t:'H2 goals',d:'10 min'},{c:'#f87171',t:'Close',d:'5 min'}];
+  h+=`<div class="setup-section"><div class="setup-section-header"><div>
+    <div class="setup-section-title"><i class="ti ti-clock"></i> Meeting structure</div>
+    <div class="setup-section-desc">60-minute agenda &middot; <span style="color:var(--accent);cursor:pointer" onclick="showView('agenda')">view full agenda &rarr;</span></div>
+  </div></div><div class="agenda-mini">`;
+  agPh.forEach((p,i)=>{h+=`<div class="agenda-mini-item"><div class="ami-num" style="color:${p.c}">${String(i+1).padStart(2,'0')}</div><div class="ami-title">${p.t}</div><div class="ami-time">${p.d}</div></div>`;});
+  h+=`</div></div>`;
+  el.innerHTML=h;
+}
+function toggleDeptKpis(btn){
+  const p=document.getElementById('deptKpiPanel'),open=p.style.display==='block';
+  p.style.display=open?'none':'block';
+  btn.innerHTML=open?'<i class="ti ti-building"></i> View web department KPIs for 2026':'<i class="ti ti-building"></i> Hide department KPIs';
+}
+function setKpiMeta(ki,f,v){state.kpis[ki][f]=v;saveQuiet();}
+function addKpi(){const id=uid();state.kpis.push({id,label:'',hint:'',target:''});state.members.forEach(m=>m.checkpoints.forEach(cp=>{cp.kpis[id]='';cp.notes[id]='';}));save();renderSetup();}
+function deleteKpi(ki){if(state.kpis.length<=1){alert('At least one KPI is required.');return;}if(!confirm('Remove this KPI from all scorecards?'))return;state.kpis.splice(ki,1);save();renderSetup();}
+function toggleTp(ci,ii){state.tracking[ci].items[ii].enabled=!state.tracking[ci].items[ii].enabled;save();renderSetup();}
+function deleteTp(ci,ii){const item=state.tracking[ci].items[ii];if(!confirm(`Remove "${item.label}"?`))return;state.tracking[ci].items.splice(ii,1);save();renderSetup();}
+function openEditTp(ci,ii){editTpTarget={type:'edit',ci,ii};const item=state.tracking[ci].items[ii];document.getElementById('editTpTitle').textContent='Edit tracking point';document.getElementById('etp-label').value=item.label;document.getElementById('etp-hint').value=item.hint||'';_populateCatSelect(ci);document.getElementById('editTpModal').classList.add('open');setTimeout(()=>document.getElementById('etp-label').focus(),50);}
+function openAddTp(ci){editTpTarget={type:'add',ci};document.getElementById('editTpTitle').textContent='Add tracking point';document.getElementById('etp-label').value='';document.getElementById('etp-hint').value='';_populateCatSelect(ci);document.getElementById('editTpModal').classList.add('open');setTimeout(()=>document.getElementById('etp-label').focus(),50);}
+function _populateCatSelect(sel_ci){const sel=document.getElementById('etp-cat');sel.innerHTML='';state.tracking.forEach((cat,i)=>{const opt=document.createElement('option');opt.value=i;opt.textContent=cat.cat;if(i===sel_ci)opt.selected=true;sel.appendChild(opt);});}
+function saveEditTp(){
+  const label=document.getElementById('etp-label').value.trim();if(!label){document.getElementById('etp-label').focus();return;}
+  const hint=document.getElementById('etp-hint').value.trim(),targetCi=parseInt(document.getElementById('etp-cat').value);
+  if(editTpTarget.type==='edit'){
+    const{ci,ii}=editTpTarget,item=state.tracking[ci].items[ii];
+    if(targetCi!==ci){state.tracking[ci].items.splice(ii,1);state.tracking[targetCi].items.push({...item,label,hint});}
+    else{item.label=label;item.hint=hint;}
+  }else{
+    const newItem={id:uid(),label,hint,enabled:true};
+    state.tracking[targetCi].items.push(newItem);
+    state.members.forEach(m=>m.checkpoints.forEach(cp=>{cp.scores[newItem.id]=0;cp.notes[newItem.id]='';}));
+  }
+  save();closeEditTp();renderSetup();
+}
+function closeEditTp(){document.getElementById('editTpModal').classList.remove('open');}
+
+// ── DASHBOARD ────────────────────────────────────────────────────
+function renderDashboard(){
+  const el=document.getElementById('dashContent'),n=state.members.length;
+  document.getElementById('dashSubtitle').textContent=`Mid-year review \xb7 ${n} team member${n!==1?'s':''}`;
+  if(!n){el.innerHTML=`<div class="empty-state"><div class="empty-icon"><i class="ti ti-users"></i></div><h3>No team members yet</h3><p>Add your first team member to start their performance review scorecard.</p><button class="btn btn-primary" onclick="openAddModal()"><i class="ti ti-plus"></i> Add first member</button></div>`;return;}
+  const done=state.members.filter(m=>m.checkpoints.some(cp=>Object.values(cp.scores).some(v=>v>0))).length;
+  let h=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+    <div class="card-sm"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Total members</div><div style="font-size:22px;font-weight:700;font-family:var(--mono)">${n}</div></div>
+    <div class="card-sm"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Reviews started</div><div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green)">${done}</div></div>
+    <div class="card-sm"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Pending</div><div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--amber)">${n-done}</div></div>
+  </div><div class="team-grid">`;
+  state.members.forEach((m,i)=>{
+    ensureMemberDims(m);
+    const ac=avatarColor(m.name),latestCp=m.checkpoints[m.checkpoints.length-1];
+    const overall=getOverallScore(m,latestCp),sc=overall?overall.toFixed(1):'--',c=scoreColor(overall),bg=scoreBg(overall),pct=overall?(overall/5)*100:0;
+    const kpiHtml=state.kpis.slice(0,4).map(d=>`<div class="mc-kpi"><div class="kpi-label">${(d.label||'KPI').split(' ').slice(0,3).join(' ')}</div><div class="kpi-val">${latestCp.kpis[d.id]||'--'}</div></div>`).join('');
+    h+=`<div class="member-card" onclick="openMember(${i})">
+      <div class="mc-top"><div class="avatar" style="background:${ac}22;color:${ac}">${initials(m.name)}</div>
+      <div class="mc-info"><div class="mc-name">${m.name}</div><div class="mc-role">${m.team||'No team set'} \xb7 ${m.checkpoints.length} checkpoint${m.checkpoints.length!==1?'s':''}</div></div></div>
+      <div class="mc-scores">${kpiHtml}</div>
+      <div class="mc-footer"><div class="overall-badge" style="background:${bg};color:${c}"><i class="ti ti-chart-bar" style="font-size:11px"></i>${sc}/5</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${c}"></div></div></div>
+    </div>`;
+  });
+  h+='</div>';el.innerHTML=h;
+}
+
+// ── MEMBER DETAIL ────────────────────────────────────────────────
+function openMember(idx){currentMemberIdx=idx;currentCpIdx=state.members[idx].checkpoints.length-1;currentDetailTab='scorecard';showView('member');}
+function navMember(dir){const n=state.members.length;if(!n)return;currentMemberIdx=(currentMemberIdx+dir+n)%n;currentCpIdx=state.members[currentMemberIdx].checkpoints.length-1;renderMemberDetail();renderSidebar();}
+
+function renderMemberDetail(){
+  if(!state.members.length)return;
+  const m=state.members[currentMemberIdx];
+  ensureMemberDims(m);
+  currentCpIdx=Math.min(currentCpIdx,m.checkpoints.length-1);
+  const cp=getCp(m);
+  const ac=avatarColor(m.name),overall=getOverallScore(m,cp),sc=overall?overall.toFixed(1):'--',c=scoreColor(overall),bg=scoreBg(overall);
+  document.getElementById('memberNavLabel').textContent=`${currentMemberIdx+1} / ${state.members.length}`;
+  pendingRadar=null;
+
+  let h=`<div class="member-detail-header">
+    <div class="avatar-lg" style="background:${ac}22;color:${ac}">${initials(m.name)}</div>
+    <div class="mh-info"><h2>${m.name}</h2>
+    <div class="mh-meta">${m.team?`<span><i class="ti ti-users" style="font-size:11px"></i> ${m.team}</span>`:''}</div></div>
+    <div class="mh-right">
+      <div class="overall-badge" style="background:${bg};color:${c};font-size:16px;padding:6px 14px">${sc}<span style="font-size:11px;opacity:0.7"> / 5</span></div>
+      <div class="score-label-sm">${overall?SCORE_LABELS[Math.round(overall)]:'Not scored yet'}</div>
+    </div>
+  </div>`;
+
+  // Checkpoint bar
+  h+=`<div class="cp-bar"><span class="cp-bar-label">Checkpoint</span><div class="cp-pills">`;
+  m.checkpoints.forEach((cp2,ci)=>{h+=`<button class="cp-pill${ci===currentCpIdx?' active':''}" onclick="switchCp(${ci})">${cp2.label}</button>`;});
+  h+=`</div><div class="cp-actions">
+    <button class="btn btn-ghost btn-sm" onclick="openAddCpModal()"><i class="ti ti-plus"></i> Add</button>
+    ${m.checkpoints.length>1?`<button class="btn btn-danger btn-sm" onclick="deleteCheckpoint()"><i class="ti ti-trash"></i></button>`:''}
+  </div></div>`;
+
+  // Tabs
+  const saFilled=m.selfAssessment&&Object.values(m.selfAssessment).some(v=>v&&v.trim());
+  h+=`<div class="tabs">
+    <div class="tab ${currentDetailTab==='self'?'active':''}" onclick="switchDetailTab('self')"><i class="ti ti-writing"></i> Self-assessment${saFilled?'<span class="tab-dot"></span>':''}</div>
+    <div class="tab ${currentDetailTab==='scorecard'?'active':''}" onclick="switchDetailTab('scorecard')"><i class="ti ti-table"></i> Scorecard</div>
+    <div class="tab ${currentDetailTab==='overview'?'active':''}" onclick="switchDetailTab('overview')"><i class="ti ti-chart-radar"></i> Overview</div>
+    <div class="tab ${currentDetailTab==='progress'?'active':''}" onclick="switchDetailTab('progress')"><i class="ti ti-trending-up"></i> Progress${m.checkpoints.length>1?'<span class="tab-dot" style="background:var(--accent)"></span>':''}</div>
+    <div class="tab ${currentDetailTab==='notes'?'active':''}" onclick="switchDetailTab('notes')"><i class="ti ti-notes"></i> Notes</div>
+  </div>`;
+
+  const dims=getAllDimensions();
+
+  if(currentDetailTab==='self'){
+    const sa=m.selfAssessment||{},answered=SA_QUESTIONS.filter(q=>sa[q.id]&&sa[q.id].trim()).length;
+    h+=`<div class="sa-status-bar"><div class="sa-progress-wrap"><div class="sa-progress-fill" style="width:${Math.round(answered/SA_QUESTIONS.length*100)}%"></div></div><span class="sa-progress-label">${answered} / ${SA_QUESTIONS.length} answered</span></div>`;
+    h+=`<div class="sa-intro"><i class="ti ti-send" style="font-size:14px;color:var(--accent)"></i><span>Send these questions to <strong>${m.name}</strong> 3&ndash;5 days before the meeting, then record their answers here.</span></div>`;
+    SA_QUESTIONS.forEach((q,qi)=>{
+      const val=sa[q.id]||'',ans=val.trim().length>0;
+      h+=`<div class="sa-question${ans?' sa-answered':''}"><div class="sa-q-header">
+        <div class="sa-q-num">${String(qi+1).padStart(2,'0')}</div>
+        <div class="sa-q-body"><div class="sa-q-label">${q.label}</div><div class="sa-q-hint">${q.hint}</div></div>
+        ${ans?'<div class="sa-check"><i class="ti ti-check"></i></div>':''}
+      </div><textarea class="sa-textarea" placeholder="Record ${m.name.split(' ')[0]}'s answer here&hellip;" oninput="setSA('${m.id}','${q.id}',this.value)">${val}</textarea></div>`;
+    });
+    h+=`<div class="card" style="margin-top:8px;display:flex;align-items:center;gap:12px;padding:14px 16px"><i class="ti ti-bulb" style="font-size:16px;color:var(--amber);flex-shrink:0"></i><div style="font-size:12px;color:var(--text2);line-height:1.6"><strong style="color:var(--text)">Manager tip:</strong> Review these before the meeting. Where they are self-critical, affirm it. Where they are overly positive and miss issues, use it as a bridge.</div></div>`;
+
+  } else if(currentDetailTab==='scorecard'){
+    h+=`<div class="score-legend">
+      <div class="leg"><div class="leg-dot" style="background:#f87171"></div>1 Below</div>
+      <div class="leg"><div class="leg-dot" style="background:#f59e0b"></div>2 Developing</div>
+      <div class="leg"><div class="leg-dot" style="background:#6c8cff"></div>3 Meets</div>
+      <div class="leg"><div class="leg-dot" style="background:#3ecf8e"></div>4 Exceeds</div>
+      <div class="leg"><div class="leg-dot" style="background:#a78bfa"></div>5 Exceptional</div>
+    </div>`;
+    dims.forEach(cat=>{
+      h+=`<div class="cat-group"><div class="cat-title">${cat.cat}</div>`;
+      cat.items.forEach(d=>{
+        const note=cp.notes[d.id]||'';
+        if(cat.kpi){
+          h+=`<div class="kpi-input-row">
+            <div><div style="font-size:13px;font-weight:500">${d.label||'Untitled KPI'}</div>
+            ${d.hint?`<div style="font-size:11px;color:var(--text3);margin-top:2px"><i class="ti ti-target" style="font-size:10px"></i> ${d.hint}</div>`:''}
+            ${d.target?`<div style="font-size:11px;color:var(--amber);margin-top:2px"><i class="ti ti-flag" style="font-size:10px"></i> Target: ${d.target}</div>`:''}</div>
+            <input class="kpi-number-input" placeholder="Enter value&hellip;" value="${cp.kpis[d.id]||''}" oninput="setKpi('${m.id}','${cp.id}','${d.id}',this.value)"/>
+            <textarea class="notes-input" placeholder="Notes&hellip;" oninput="setNote('${m.id}','${cp.id}','${d.id}',this.value)">${note}</textarea>
+          </div>`;
+        }else{
+          const cur=cp.scores[d.id]||0;
+          const dots=[1,2,3,4,5].map(n=>`<div class="sdot s${n}${cur===n?' sel':''}" onclick="setScore('${m.id}','${cp.id}','${d.id}',${n})">${n}</div>`).join('');
+          h+=`<div class="score-row">
+            <div><div style="font-size:13px">${d.label}</div><div style="font-size:11px;color:var(--text3)">${d.hint}</div></div>
+            <div class="score-dots">${dots}</div>
+            <textarea class="notes-input" placeholder="Notes&hellip;" oninput="setNote('${m.id}','${cp.id}','${d.id}',this.value)">${note}</textarea>
+          </div>`;
+        }
+      });
+      h+=`</div>`;
+    });
+    h+=`<div class="card" style="margin-top:8px"><div style="font-size:13px;font-weight:600;margin-bottom:8px">Overall notes</div>
+      <textarea class="notes-input" style="height:80px;width:100%" placeholder="Key themes, strengths, development areas, H2 goals&hellip;" oninput="setOverallNotes('${m.id}','${cp.id}',this.value)">${cp.overallNotes||''}</textarea>
+    </div>`;
+
+  } else if(currentDetailTab==='overview'){
+    const nonKpiCats=getEnabledTracking();
+    const catNames=nonKpiCats.map(c=>c.cat.split(' ')[0]);
+    const catVals=nonKpiCats.map(cat=>{const sc2=cat.items.filter(d=>cp.scores[d.id]>0);return sc2.length?(sc2.reduce((a,d)=>a+cp.scores[d.id],0)/sc2.length):0;});
+    const radarId='rc_'+Date.now();
+    pendingRadar={canvasId:radarId,catNames,catVals};
+    h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">`;
+    nonKpiCats.forEach(cat=>{
+      const sc2=cat.items.filter(d=>cp.scores[d.id]>0),avg=sc2.length?(sc2.reduce((a,d)=>a+cp.scores[d.id],0)/sc2.length):0,cc=scoreColor(avg||null);
+      h+=`<div class="card-sm"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">${cat.cat}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:${cc}">${avg?avg.toFixed(1):'--'}</div>
+          <div style="flex:1;height:4px;background:var(--surface3);border-radius:2px"><div style="height:100%;border-radius:2px;background:${cc};width:${avg?(avg/5*100):0}%"></div></div>
+          <div style="font-size:11px;color:var(--text3)">${sc2.length}/${cat.items.length}</div>
+        </div></div>`;
+    });
+    h+=`</div><div class="card" style="display:flex;justify-content:center"><canvas id="${radarId}" width="400" height="300" style="max-width:100%"></canvas></div>
+    <div class="card" style="margin-top:14px"><div style="font-size:13px;font-weight:600;margin-bottom:10px">KPI snapshot</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">`;
+    state.kpis.forEach(d=>{h+=`<div class="card-sm"><div style="font-size:11px;color:var(--text3)">${d.label||'KPI'}</div><div style="font-size:18px;font-weight:700;font-family:var(--mono)">${cp.kpis[d.id]||'--'}</div></div>`;});
+    h+=`</div></div>`;
+
+  } else if(currentDetailTab==='progress'){
+    if(m.checkpoints.length<2){
+      h+=`<div class="empty-state" style="padding:40px 20px"><div class="empty-icon"><i class="ti ti-trending-up"></i></div><h3>No progress data yet</h3><p>Add a second checkpoint to start tracking progress over time.</p><button class="btn btn-primary" onclick="openAddCpModal()"><i class="ti ti-plus"></i> Add checkpoint</button></div>`;
+    }else{
+      const cps=m.checkpoints;
+      const enabledDims=getEnabledTracking().flatMap(cat=>cat.items.map(d=>({...d,cat:cat.cat})));
+      h+=`<div class="card" style="margin-bottom:16px"><div style="font-size:13px;font-weight:600;margin-bottom:12px">Overall score progression</div>
+        <div style="display:flex;align-items:flex-end;gap:8px;height:80px;padding-bottom:4px">`;
+      cps.forEach((cp2,ci)=>{
+        const v=getOverallScore(m,cp2),pct2=v?(v/5)*100:0,co=scoreColor(v),isActive=ci===currentCpIdx;
+        h+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer" onclick="switchCp(${ci})">
+          <div style="font-size:11px;font-family:var(--mono);font-weight:600;color:${co}">${v?v.toFixed(1):'--'}</div>
+          <div style="width:100%;background:var(--surface3);border-radius:4px;overflow:hidden;height:40px;display:flex;align-items:flex-end">
+            <div style="width:100%;height:${pct2}%;background:${co};opacity:${isActive?1:0.5};border-radius:4px 4px 0 0"></div>
+          </div>
+          <div style="font-size:10px;color:${isActive?'var(--accent)':'var(--text3)'};text-align:center;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:${isActive?600:400}">${cp2.label}</div>
+        </div>`;
+      });
+      h+=`</div></div>
+      <div class="card"><div style="font-size:13px;font-weight:600;margin-bottom:12px">Score progression by dimension</div>
+        <div class="progress-chart-wrap"><table class="progress-table"><thead><tr><th>Dimension</th>`;
+      cps.forEach(cp2=>{h+=`<th>${cp2.label}</th>`;});
+      h+=`<th>&Delta;</th></tr></thead><tbody>`;
+      enabledDims.forEach(d=>{
+        const vals2=cps.map(cp2=>cp2.scores[d.id]||0);
+        const first=vals2.find(v=>v>0)||0,last=vals2[vals2.length-1]||0;
+        const delta=last-first,dClass=delta>0?'delta-up':delta<0?'delta-dn':'delta-eq';
+        const dStr=delta>0?`+${delta.toFixed(1)}`:delta<0?delta.toFixed(1):'=';
+        h+=`<tr><td>${d.label}</td>`;
+        vals2.forEach(v=>{const co2=scoreColor(v||null);h+=`<td style="color:${v?co2:'var(--text3)'}">${v||'--'}</td>`;});
+        h+=`<td class="${dClass}" style="font-weight:600">${dStr}</td></tr>`;
+      });
+      state.kpis.forEach(d=>{
+        h+=`<tr><td style="color:var(--text2)">${d.label}</td>`;
+        cps.forEach(cp2=>{h+=`<td style="color:var(--text2)">${cp2.kpis[d.id]||'--'}</td>`;});
+        h+=`<td style="color:var(--text3)">--</td></tr>`;
+      });
+      h+=`</tbody></table></div></div>`;
+    }
+
+  } else if(currentDetailTab==='notes'){
+    const sa=m.selfAssessment||{},hasSA=SA_QUESTIONS.some(q=>sa[q.id]&&sa[q.id].trim());
+    if(hasSA){
+      h+=`<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><i class="ti ti-writing" style="color:var(--accent);font-size:15px"></i><div style="font-size:13px;font-weight:600">Self-assessment</div></div>`;
+      SA_QUESTIONS.forEach(q=>{if(sa[q.id]&&sa[q.id].trim()){h+=`<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:11px;color:var(--text3);margin-bottom:2px">${q.label}</div><div style="font-size:13px;line-height:1.6">${sa[q.id]}</div></div>`;}});
+      h+=`</div>`;
+    }
+    h+=`<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><i class="ti ti-table" style="color:var(--accent);font-size:15px"></i><div style="font-size:13px;font-weight:600">Scorecard notes &middot; ${cp.label}</div></div>`;
+    let hasN=false;
+    dims.forEach(cat=>cat.items.forEach(d=>{const n2=cp.notes[d.id];if(n2&&n2.trim()){hasN=true;h+=`<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:11px;color:var(--text3);margin-bottom:2px">${cat.cat} &rsaquo; ${d.label}</div><div style="font-size:13px;line-height:1.6">${n2}</div></div>`;};}));
+    if(!hasN)h+=`<div style="font-size:13px;color:var(--text3);text-align:center;padding:20px">No notes for this checkpoint.</div>`;
+    h+=`</div>`;
+    if(cp.overallNotes){h+=`<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i class="ti ti-message" style="color:var(--accent);font-size:15px"></i><div style="font-size:13px;font-weight:600">Overall notes</div></div><div style="font-size:13px;color:var(--text2);line-height:1.6">${cp.overallNotes}</div></div>`;}
+    if(!hasSA&&!hasN&&!cp.overallNotes){h+=`<div class="empty-state" style="padding:40px 20px"><div class="empty-icon"><i class="ti ti-notes"></i></div><h3>No notes yet</h3><p>Fill in the Self-assessment tab, then add scorecard notes during the review.</p></div>`;}
+  }
+
+  document.getElementById('memberContent').innerHTML=h;
+  // Draw radar after DOM update (no inline script needed)
+  if(pendingRadar){
+    const pr=pendingRadar;pendingRadar=null;
+    requestAnimationFrame(()=>drawRadar(pr.canvasId,pr.catNames,pr.catVals));
+  }
+}
+
+// ── CHECKPOINT ACTIONS ───────────────────────────────────────────
+function switchCp(idx){currentCpIdx=idx;renderMemberDetail();}
+function openAddCpModal(){document.getElementById('addCpModal').classList.add('open');setTimeout(()=>document.getElementById('inp-cp-label').focus(),50);}
+function closeAddCpModal(){document.getElementById('addCpModal').classList.remove('open');}
+function addCheckpoint(){
+  const label=document.getElementById('inp-cp-label').value.trim();if(!label){document.getElementById('inp-cp-label').focus();return;}
+  const m=state.members[currentMemberIdx],copyFrom=document.getElementById('inp-cp-copy').value==='copy'?getCp(m):null;
+  const newCp=initCheckpoint(label,copyFrom);
+  m.checkpoints.push(newCp);currentCpIdx=m.checkpoints.length-1;
+  save();closeAddCpModal();renderMemberDetail();
+}
+function deleteCheckpoint(){
+  const m=state.members[currentMemberIdx];if(m.checkpoints.length<=1){alert('At least one checkpoint is required.');return;}
+  const cp2=getCp(m);if(!confirm(`Delete checkpoint "${cp2.label}"? All scores for this checkpoint will be lost.`))return;
+  m.checkpoints.splice(currentCpIdx,1);currentCpIdx=Math.max(0,currentCpIdx-1);
+  save();renderMemberDetail();
+}
+
+// ── SCORECARD ACTIONS ────────────────────────────────────────────
+function findCp(mid,cpid){const m=state.members.find(x=>x.id===mid);return m?m.checkpoints.find(c=>c.id===cpid):null;}
+function setScore(mid,cpid,did,val){const cp2=findCp(mid,cpid);if(!cp2)return;cp2.scores[did]=cp2.scores[did]===val?0:val;save();renderMemberDetail();}
+function setKpi(mid,cpid,did,val){const cp2=findCp(mid,cpid);if(!cp2)return;cp2.kpis[did]=val;save();}
+function setNote(mid,cpid,did,val){const cp2=findCp(mid,cpid);if(!cp2)return;cp2.notes[did]=val;save();}
+function setOverallNotes(mid,cpid,val){const cp2=findCp(mid,cpid);if(!cp2)return;cp2.overallNotes=val;save();}
+function setSA(mid,qid,val){const m=state.members.find(x=>x.id===mid);if(!m)return;if(!m.selfAssessment)m.selfAssessment={};m.selfAssessment[qid]=val;save();}
+function switchDetailTab(tab){currentDetailTab=tab;renderMemberDetail();renderSidebar();}
+
+// ── EXPORT / IMPORT ──────────────────────────────────────────────
+function openExportModal(){document.getElementById('exportMemberName').textContent=state.members[currentMemberIdx].name;document.getElementById('exportModal').classList.add('open');}
+function closeExportModal(){document.getElementById('exportModal').classList.remove('open');}
+
+function doExport(){
+  const m=state.members[currentMemberIdx],wb=XLSX.utils.book_new(),dims=getAllDimensions();
+  m.checkpoints.forEach(cp2=>{
+    const rows=[['Category','Dimension','Hint','Score / Value','Notes']];
+    dims.forEach(cat=>cat.items.forEach(d=>{rows.push([cat.cat,d.label,d.hint||'',cat.kpi?(cp2.kpis[d.id]||''):(cp2.scores[d.id]||0),cp2.notes[d.id]||'']);}));
+    rows.push([]);rows.push(['Overall notes','','','',cp2.overallNotes||'']);
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:28},{wch:30},{wch:40},{wch:16},{wch:50}];
+    XLSX.utils.book_append_sheet(wb,ws,cp2.label.replace(/[\/\\:\?\*\[\]]/g,'').slice(0,31));
+  });
+  const sa=m.selfAssessment||{},saRows=[['Question','Hint','Answer']];
+  SA_QUESTIONS.forEach(q=>saRows.push([q.label,q.hint,sa[q.id]||'']));
+  const saWs=XLSX.utils.aoa_to_sheet(saRows);
+  saWs['!cols']=[{wch:50},{wch:50},{wch:60}];
+  XLSX.utils.book_append_sheet(wb,saWs,'Self-assessment');
+  XLSX.writeFile(wb,`${m.name.replace(/\s+/g,'_')}_review_2026.xlsx`);
+  closeExportModal();
+}
+
+function importXLSX(input){
+  const file=input.files[0];if(!file)return;
+  const m=state.members[currentMemberIdx],reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}),dims=getAllDimensions();
+      let imported=0;
+      wb.SheetNames.forEach(sheetName=>{
+        if(sheetName==='Self-assessment'){
+          const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:''}).slice(1);
+          if(!m.selfAssessment)m.selfAssessment={};
+          rows.forEach(row=>{const q=SA_QUESTIONS.find(x=>x.label===String(row[0]||'').trim());if(q&&String(row[2]||'').trim())m.selfAssessment[q.id]=String(row[2]).trim();});
+          return;
+        }
+        let cp2=m.checkpoints.find(c=>c.label===sheetName);
+        if(!cp2){cp2=initCheckpoint(sheetName,null);m.checkpoints.push(cp2);imported++;}
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:''}).slice(1);
+        rows.forEach(row=>{
+          const dimLabel=String(row[1]||'').trim(),val=row[3],note=String(row[4]||'').trim();
+          dims.forEach(cat=>cat.items.forEach(d=>{
+            if(d.label===dimLabel){
+              if(cat.kpi)cp2.kpis[d.id]=String(val||'');
+              else{const n=parseInt(val);cp2.scores[d.id]=(n>=1&&n<=5)?n:0;}
+              if(note)cp2.notes[d.id]=note;
+            }
+          }));
+          if(String(row[0]).toLowerCase()==='overall notes')cp2.overallNotes=String(val||row[4]||'');
+        });
+      });
+      currentCpIdx=m.checkpoints.length-1;
+      save();renderMemberDetail();
+      alert(`Import complete. ${imported} new checkpoint${imported!==1?'s':''} added.`);
+    }catch(err){alert('Import failed: '+err.message);}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── VIEW ROUTING ─────────────────────────────────────────────────
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const nav=document.getElementById('nav-'+name);if(nav)nav.classList.add('active');
+  if(name==='setup'){renderSetup();renderSidebar();}
+  if(name==='dashboard'){renderDashboard();renderSidebar();}
+  if(name==='member'){renderMemberDetail();renderSidebar();}
+  if(name==='agenda'){renderAgenda();}
+  if(name==='help'){renderHelp();}
+}
+
+// ── MEMBER MODAL ─────────────────────────────────────────────────
+function openAddModal(){document.getElementById('addModal').classList.add('open');setTimeout(()=>document.getElementById('inp-name').focus(),50);}
+function closeAddModal(){document.getElementById('addModal').classList.remove('open');}
+function addMember(){
+  const name=document.getElementById('inp-name').value.trim();if(!name){document.getElementById('inp-name').focus();return;}
+  const m=initMember(name,document.getElementById('inp-team').value.trim());
+  state.members.push(m);save();closeAddModal();
+  document.getElementById('inp-name').value='';document.getElementById('inp-team').value='';
+  currentMemberIdx=state.members.length-1;currentCpIdx=0;showView('member');
+}
+function deleteMember(){
+  if(!state.members.length)return;
+  const m=state.members[currentMemberIdx];
+  if(!confirm(`Delete ${m.name}'s entire review history? This cannot be undone.`))return;
+  state.members.splice(currentMemberIdx,1);save();
+  currentMemberIdx=Math.max(0,currentMemberIdx-1);
+  if(state.members.length)showView('member');else showView('dashboard');
+}
+
+// ── AGENDA ───────────────────────────────────────────────────────
+function downloadSAForm(){
+  const questions=[
+    {q:'What are you most proud of from H1?',          hint:'Achievements, deliveries, behaviours you want to highlight'},
+    {q:'Where do you feel you could have done better?', hint:'Be honest — this is a safe space for reflection'},
+    {q:'What blockers or challenges impacted your work?',hint:'Technical, process, team, or personal obstacles'},
+    {q:'How would you rate your own overall performance this half?',hint:'1 = Below expectations  ·  3 = Meets expectations  ·  5 = Exceptional'},
+    {q:'What support, resources, or changes would help you in H2?', hint:'Training, tooling, processes, management support'},
+    {q:'What are your personal goals and focus areas for H2?',      hint:'Concrete outcomes you want to own or improve'},
+    {q:"Anything else you'd like to share before this review?",     hint:'Open space — team dynamics, role clarity, career direction'},
+  ];
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: Form ───────────────────────────────────────────────
+  const rows = [
+    ['MID-YEAR PERFORMANCE REVIEW — SELF-ASSESSMENT FORM','',''],
+    ['Please answer each question honestly and return to your manager 3–5 days before your review meeting.','',''],
+    ['','',''],
+    ['#','Question','Your answer'],
+  ];
+  questions.forEach((item,i)=>{
+    rows.push([`${i+1}. ${item.q}`, item.hint, '']);
+    rows.push(['','','']);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Style column widths
+  ws['!cols'] = [{wch:60},{wch:55},{wch:55}];
+
+  // Merge title row across all cols
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:2}},
+    {s:{r:1,c:0},e:{r:1,c:2}},
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Self-Assessment Form');
+
+  // ── Sheet 2: Instructions for manager ──────────────────────────
+  const instrRows = [
+    ['HOW TO USE THIS FORM',''],
+    ['',''],
+    ['Step','Instruction'],
+    ['1 — Send','Share this file with the team member 3–5 days before the review meeting. Ask them to fill in the "Your answer" column on the Self-Assessment Form sheet.'],
+    ['2 — Receive','Collect the completed form at least 1 day before the meeting so you have time to read it.'],
+    ['3 — Prepare','Review their answers. Note where they are self-critical (affirm and build on it) and where they may be overly positive (use it as a conversation bridge).'],
+    ['4 — Record','During or after the meeting, copy their answers into the app under the member\'s Self-assessment tab so everything stays in one place.'],
+    ['5 — Follow up','Within 48 hours of the meeting, send a written summary of key takeaways, agreed goals, and development actions.'],
+    ['',''],
+    ['SCORE REFERENCE',''],
+    ['Score','Meaning'],
+    ['1','Below expectations'],
+    ['2','Developing'],
+    ['3','Meets expectations'],
+    ['4','Exceeds expectations'],
+    ['5','Exceptional'],
+  ];
+  const instrWs = XLSX.utils.aoa_to_sheet(instrRows);
+  instrWs['!cols'] = [{wch:20},{wch:80}];
+  instrWs['!merges'] = [{s:{r:0,c:0},e:{r:0,c:1}},{s:{r:9,c:0},e:{r:9,c:1}}];
+  XLSX.utils.book_append_sheet(wb, instrWs, 'Instructions');
+
+  XLSX.writeFile(wb, 'Self_Assessment_Form_2026.xlsx');
+}
+
+function renderAgenda(){
+  const phases=[
+    {num:'01',color:'#6c8cff',title:'Opening & tone-setting',time:'5 min',
+     tips:['Thank the contributor and set a two-way, collaborative tone','Confirm the agenda — clarify this is a progress check, not a verdict','Acknowledge the self-assessment if one was sent in advance'],
+     callout:'Start with a genuine, specific opener. It disarms defensiveness before a word of feedback is given.'},
+    {num:'02',color:'#3ecf8e',title:'Self-reflection',time:'10 min',
+     tips:['What are you most proud of from H1?','Where do you feel you could have done better?','What blockers or challenges slowed you down?'],
+     callout:'Let them speak first — uninterrupted. Listen for what they don\'t mention.'},
+    {num:'03',color:'#f59e0b',title:'KPI & performance review',time:'15 min',
+     tips:['Walk through KPI scores with real numbers','Share tracking-point observations with specific examples','Use SBI: Situation → Behavior → Impact for each point','Lead with strengths before development areas'],
+     callout:'Anchor to data and specific incidents. Generalisations land poorly; evidence lands well.'},
+    {num:'04',color:'#a78bfa',title:'Discussion & dialogue',time:'15 min',
+     tips:['Invite their reaction — where do they agree or disagree?','Explore root causes together for any underperformance','Discuss cross-team dynamics (PM, QA, BE feedback)','Surface any unspoken concerns about the team or role'],
+     callout:'Treat disagreement as data. Ask "help me understand your perspective" rather than defending your score.'},
+    {num:'05',color:'#38bdf8',title:'H2 goals & development plan',time:'10 min',
+     tips:['Set 2–3 concrete, measurable H2 goals together (not imposed)','Identify 1–2 skills to develop — with a specific how','Agree on support, training, or resources needed','Note promotion-readiness signals or stretch opportunities'],
+     callout:'Frame development as growth, not remediation.'},
+    {num:'06',color:'#f87171',title:'Close & next steps',time:'5 min',
+     tips:['Summarise 3–4 key takeaways from the conversation','Confirm written summary will be shared within 48 hours','Schedule a 30-day check-in to review H2 goal progress','End on a genuine, specific positive note'],
+     callout:'The written follow-up is non-negotiable — aim for 48 hours maximum.'}
+  ];
+
+  // ── Self-assessment download card (step 0) ──────────────────────
+  let h=`<div class="sa-download-card">
+    <div class="sa-dl-badge">Before the meeting</div>
+    <div class="sa-dl-body">
+      <div class="sa-dl-icon"><i class="ti ti-writing"></i></div>
+      <div class="sa-dl-text">
+        <div class="sa-dl-title">Self-assessment form</div>
+        <div class="sa-dl-desc">Send this to each team member <strong>3–5 days before</strong> their review. They fill in their answers and return it to you. Review the responses before walking into the meeting — it makes the self-reflection block far more productive.</div>
+        <div class="sa-dl-questions">
+          ${['What are you most proud of from H1?','Where could you have done better?','What blockers impacted your work?','How would you rate your own performance? (1–5)','What support do you need in H2?','What are your H2 goals?','Anything else to share?'].map(q=>`<span class="sa-dl-q"><i class="ti ti-arrow-right"></i>${q}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="downloadSAForm()" style="align-self:flex-end;margin-top:4px">
+      <i class="ti ti-download"></i> Download form (.xlsx)
+    </button>
+  </div>`;
+
+  // ── Timeline ────────────────────────────────────────────────────
+  h+='<div class="agenda-timeline">';
+  phases.forEach((p,i)=>{
+    h+=`<div class="ag-item"><div class="ag-left"><div class="ag-num" style="background:${p.color}18;color:${p.color};border-color:${p.color}40">${p.num}</div>${i<phases.length-1?'<div class="ag-line"></div>':''}</div>
+    <div class="ag-content"><div class="ag-title">${p.title}<span class="ag-time">${p.time}</span></div>
+    <ul class="ag-tips">${p.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+    <div class="ag-callout"><strong>Tip:</strong> ${p.callout}</div></div></div>`;
+  });
+  h+=`</div>`;
+
+  // ── Pre-meeting checklist ───────────────────────────────────────
+  h+=`<div class="card" style="margin-top:24px"><div style="font-size:13px;font-weight:600;margin-bottom:12px">Pre-meeting checklist</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+  ${['Send self-assessment form 3–5 days ahead','Gather cross-team feedback (PM, QA, BE)','Review data: tickets, PRs, velocity, defect logs','Prepare 2–3 specific positive examples','Avoid back-to-back reviews — 15 min buffer between','Check your scores for recency bias before the meeting']
+    .map(t=>`<div style="display:flex;gap:8px;font-size:12px;color:var(--text2);align-items:flex-start"><i class="ti ti-circle-check" style="color:var(--green);font-size:13px;margin-top:1px;flex-shrink:0"></i>${t}</div>`).join('')}
+  </div></div>`;
+
+  document.getElementById('agendaContent').innerHTML=h;
+}
+
+// ── HELP ─────────────────────────────────────────────────────────
+function renderHelp(){
+  const el = document.getElementById('helpContent');
+
+  const steps = [
+    {
+      num:'01', color:'#6c8cff',
+      title:'Configure your review in Setup',
+      time:'~5 min, once before the cycle',
+      desc:'Before adding any team members, open <strong>Setup</strong> (the home page) and review the two sections.',
+      bullets:[
+        '<strong>Formal KPIs</strong> — edit the 3 default goal items to match your actual H2 objectives. Each has a title, a "Measure of Success" description, and an optional target quarter. Click <em>View web department KPIs for 2026</em> to see the benchmark table for context.',
+        '<strong>Tracking points</strong> — these 15 dimensions are suggestions. Toggle off anything not relevant to your team. Rename items, move them to a different category, or add new ones. <em>Every change immediately applies to all scorecards.</em>',
+      ],
+      tip:'You only need to do this once per cycle. All team leads should agree on the same tracking point list before starting reviews so scores are comparable.',
+      screen: drawSetupScreen()
+    },
+    {
+      num:'02', color:'#3ecf8e',
+      title:'Add your team members',
+      time:'~1 min per person',
+      desc:'Click <strong>+ Add team member</strong> at the bottom of the sidebar (or the button on the Dashboard). You only need a name and their team.',
+      bullets:[
+        'Name — full name as it appears in your HR system',
+        'Team — e.g. "Unify", "Flights", "Platform"',
+        'Each member starts with one checkpoint labelled <em>Mid-year 2026</em>. You can rename or add more later.',
+      ],
+      tip:'Add every IC on your team before the review cycle starts. The dashboard gives you a bird\'s-eye view of who has been scored and who is still pending.',
+      screen: drawDashboardScreen()
+    },
+    {
+      num:'03', color:'#f59e0b',
+      title:'Send the self-assessment form',
+      time:'3–5 days before each meeting',
+      desc:'Go to <strong>Meeting agenda</strong> and download the self-assessment form (.xlsx). Send it to the team member and ask them to return it before the meeting.',
+      bullets:[
+        'The form has 7 reflective questions — what they\'re proud of, where they fell short, blockers, self-rating, support needed, H2 goals, and open comments.',
+        'When you receive it back, open the member\'s profile → <em>Self-assessment tab</em> and type in their answers. This creates a permanent record alongside their scores.',
+        'The tab shows a progress bar (e.g. "5 / 7 answered") and each answered question gets a green checkmark.',
+      ],
+      tip:'Reading their self-assessment before the meeting is the single highest-leverage preparation you can do. It tells you where their self-awareness is sharp — and where it isn\'t.',
+      screen: drawSAScreen()
+    },
+    {
+      num:'04', color:'#a78bfa',
+      title:'Score each team member',
+      time:'10–15 min per person',
+      desc:'Open a team member from the sidebar or dashboard, then go to the <strong>Scorecard tab</strong>.',
+      bullets:[
+        '<strong>Formal KPIs</strong> — enter actual values (e.g. "87%" or "1.6"). These are free-text so you can enter any format.',
+        '<strong>Tracking points</strong> — click the numbered dots 1–5. Clicking the same dot again clears it. Use the notes column on the right to add a specific example for each score.',
+        'The overall score (top-right of the header) updates live as you score.',
+        'Add a final <em>Overall notes</em> block at the bottom — use this for key themes, development areas, and H2 goals agreed during the meeting.',
+      ],
+      tip:'Always add at least one note per dimension you score below 3. It\'s far easier to recall why you gave a score when the note is right there next to it.',
+      screen: drawScorecardScreen()
+    },
+    {
+      num:'05', color:'#38bdf8',
+      title:'Review the overview & progress',
+      time:'2 min, any time',
+      desc:'The <strong>Overview tab</strong> shows a radar chart across all 4 non-KPI categories plus category averages and KPI snapshot. The <strong>Progress tab</strong> unlocks once you have 2+ checkpoints.',
+      bullets:[
+        'The radar shows relative strengths visually — a flat polygon means balanced performance; a spike means one area is far ahead or behind.',
+        'The progress tab shows a bar chart of overall scores across all checkpoints and a table with a Δ column (change from first to last checkpoint, green = improvement, red = regression).',
+        'Click any bar in the chart to switch to that checkpoint\'s scorecard.',
+      ],
+      tip:'Use the progress chart in the meeting itself — show the IC their trajectory. "You\'ve gone from 2.8 to 3.6 in Execution over 3 months" is far more motivating than a single score.',
+      screen: drawProgressScreen()
+    },
+    {
+      num:'06', color:'#34d399',
+      title:'Add checkpoints over time',
+      time:'~1 min to create, 10–15 min to fill',
+      desc:'A checkpoint is a dated snapshot of scores — think of it as one review session. Use them monthly, quarterly, or whenever you hold a formal check-in.',
+      bullets:[
+        'In any member\'s profile, click <strong>+ Add</strong> in the checkpoint bar at the top.',
+        'Give it a clear name: "July 2026", "Q3 Review", "End of probation", etc.',
+        'Choose <em>Start blank</em> for a fresh slate or <em>Copy current scores</em> to use the previous checkpoint as a baseline.',
+        'You can delete a checkpoint (trash icon) but the first one cannot be removed.',
+      ],
+      tip:'Naming checkpoints consistently makes the progress chart readable. "June", "July", "August" is cleaner than "Mid-year", "Follow-up", "Q3 check".',
+      screen: drawCheckpointScreen()
+    },
+    {
+      num:'07', color:'#fb923c',
+      title:'Export and import Excel files',
+      time:'~30 seconds',
+      desc:'Use the <strong>Export</strong> and <strong>Import</strong> buttons at the top of any member\'s profile to move data in and out as Excel files.',
+      bullets:[
+        '<strong>Export</strong> — downloads an .xlsx file named <em>FirstName_LastName_review_2026.xlsx</em>. Each checkpoint becomes its own sheet. A final "Self-assessment" sheet includes all 7 answers.',
+        '<strong>Import</strong> — accepts any .xlsx in the same format. Sheets are matched to checkpoints by name. New sheet names create new checkpoints automatically. Existing ones are updated.',
+        'Use export to: share with HR, archive at end of cycle, or hand off a member to a new manager.',
+        'Use import to: restore from a backup, receive a completed form from another manager, or bulk-load scores prepared offline.',
+      ],
+      tip:'Export immediately after every review session. localStorage is browser-specific — it won\'t survive a browser data clear. The .xlsx file is your durable backup.',
+      screen: drawExportScreen()
+    },
+  ];
+
+  let html = `
+  <div class="help-intro">
+    <div class="help-intro-inner">
+      <div class="help-intro-icon"><i class="ti ti-rocket"></i></div>
+      <div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:4px">Welcome to Performance Review</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6">This guide walks you through the full review cycle — from configuring your setup to running monthly checkpoints and exporting to Excel. Follow the 7 steps in order for your first cycle; after that you'll only need steps 3–5 each month.</div>
+      </div>
+    </div>
+    <div class="help-flow">
+      ${steps.map((s,i)=>`
+        <div class="help-flow-step">
+          <div class="help-flow-num" style="background:${s.color}18;color:${s.color};border-color:${s.color}40">${s.num}</div>
+          <div class="help-flow-label">${s.title.split(' ').slice(0,3).join(' ')}</div>
+          ${i<steps.length-1?`<div class="help-flow-arrow"><i class="ti ti-chevron-right"></i></div>`:''}
+        </div>`).join('')}
+    </div>
+  </div>`;
+
+  steps.forEach((s, si) => {
+    html += `
+    <div class="help-step" id="help-step-${si}">
+      <div class="help-step-header">
+        <div class="help-step-num" style="background:${s.color}18;color:${s.color};border:1.5px solid ${s.color}40">${s.num}</div>
+        <div class="help-step-meta">
+          <div class="help-step-title">${s.title}</div>
+          <div class="help-step-time"><i class="ti ti-clock" style="font-size:11px"></i> ${s.time}</div>
+        </div>
+      </div>
+      <div class="help-step-body">
+        <div class="help-step-content">
+          <p class="help-desc">${s.desc}</p>
+          <ul class="help-bullets">${s.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
+          <div class="help-tip"><i class="ti ti-bulb"></i><span><strong>Manager tip:</strong> ${s.tip}</span></div>
+        </div>
+        <div class="help-screen">${s.screen}</div>
+      </div>
+    </div>`;
+  });
+
+  html += `
+  <div class="help-faq">
+    <div style="font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="ti ti-help-circle" style="color:var(--accent)"></i> Quick reference</div>
+    ${[
+      ['Where is my data stored?','In your browser\'s localStorage — it persists indefinitely unless you clear browser data. Always export to Excel after each session as a backup.'],
+      ['Can multiple managers use this?','Not simultaneously in one browser — localStorage is local to one browser/device. Each team lead should run their own instance, or share via the Export/Import flow.'],
+      ['What if I change a tracking point after scoring?','Scores for that dimension\'s ID are preserved. Renaming a tracking point updates the label everywhere. Deleting one removes it from future scorecards but old data is retained in localStorage.'],
+      ['Can I rename a checkpoint?','Not yet via the UI — but you can export, rename the sheet in Excel, and re-import to effectively rename it.'],
+      ['What does the overall score represent?','The average of all enabled tracking point scores (1–5) that have been filled in. KPI values are not included in this average — they\'re tracked separately as raw numbers.'],
+      ['How do I share a member\'s review with HR?','Use Export to download their .xlsx file. It includes all checkpoints, all notes, and their self-assessment answers in a clean, readable format.'],
+    ].map(([q,a])=>`
+      <div class="help-faq-item">
+        <div class="help-faq-q"><i class="ti ti-point-filled" style="color:var(--accent);font-size:10px;flex-shrink:0;margin-top:3px"></i>${q}</div>
+        <div class="help-faq-a">${a}</div>
+      </div>`).join('')}
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+// ── SCREEN MOCKUPS ───────────────────────────────────────────────
+function drawSetupScreen(){
+  return `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" class="help-svg">
+    <rect width="380" height="240" rx="10" fill="#181c27" stroke="#2a2f42" stroke-width="1"/>
+    <!-- header -->
+    <rect x="0" y="0" width="380" height="36" rx="10" fill="#1e2330"/>
+    <rect x="0" y="26" width="380" height="10" fill="#1e2330"/>
+    <text x="16" y="22" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#e8eaf0">Setup</text>
+    <text x="16" y="34" font-family="Inter,sans-serif" font-size="8" fill="#555d7a">Review and customise tracked dimensions</text>
+    <!-- KPI section label -->
+    <rect x="16" y="44" width="120" height="14" rx="3" fill="#1e2330" stroke="#2a2f42"/>
+    <text x="22" y="54" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#6c8cff">📊  Formal KPIs</text>
+    <rect x="240" y="44" width="124" height="14" rx="3" fill="#1e2330" stroke="#2a2f42" stroke-dasharray="2,2"/>
+    <text x="252" y="54" font-family="Inter,sans-serif" font-size="8" fill="#8b90a8">🏢  View dept. KPIs for 2026</text>
+    <!-- KPI rows -->
+    ${[
+      {y:66, n:'01', label:'1.1 Strategic Initiatives', hint:'Delivery %', tgt:''},
+      {y:84, n:'02', label:'1.2 Improve delivery predictability', hint:'Estimation Accuracy %', tgt:'Q3'},
+      {y:102, n:'03', label:'1.3 Improve delivery quality', hint:'Quality Cycle · Defect ratio', tgt:'Q3'},
+    ].map(r=>`
+      <rect x="16" y="${r.y}" width="348" height="16" rx="3" fill="#1e2330" stroke="#2a2f42"/>
+      <rect x="20" y="${r.y+3}" width="18" height="10" rx="2" fill="#6c8cff22"/>
+      <text x="24" y="${r.y+11}" font-family="monospace" font-size="7" font-weight="700" fill="#6c8cff">${r.n}</text>
+      <text x="44" y="${r.y+10}" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#e8eaf0">${r.label}</text>
+      <text x="44" y="${r.y+16}" font-family="Inter,sans-serif" font-size="7" fill="#555d7a">${r.hint}</text>
+      ${r.tgt?`<rect x="318" y="${r.y+4}" width="22" height="8" rx="4" fill="#f59e0b22"/><text x="320" y="${r.y+10}" font-family="monospace" font-size="6" fill="#f59e0b">${r.tgt}</text>`:''}
+    `).join('')}
+    <!-- Tracking points label -->
+    <rect x="16" y="126" width="110" height="14" rx="3" fill="#1e2330" stroke="#2a2f42"/>
+    <text x="22" y="136" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#6c8cff">☑  Tracking points</text>
+    <!-- TP rows -->
+    ${[
+      {y:148, label:'Velocity & throughput', on:true},
+      {y:163, label:'Quality of work', on:true},
+      {y:178, label:'PR reviews', on:true},
+      {y:193, label:'AI adoption', on:false},
+      {y:208, label:'Innovation', on:true},
+    ].map(r=>`
+      <rect x="16" y="${r.y}" width="348" height="13" rx="3" fill="${r.on?'#1e2330':'#181c27'}" stroke="#2a2f42" opacity="${r.on?1:0.5}"/>
+      <text x="26" y="${r.y+9}" font-family="Inter,sans-serif" font-size="8" fill="${r.on?'#e8eaf0':'#555d7a'}">${r.label}</text>
+      <rect x="344" y="${r.y+3}" width="16" height="7" rx="3.5" fill="${r.on?'#6c8cff':'#242838'}"/>
+      <circle cx="${r.on?354:348}" cy="${r.y+6.5}" r="3" fill="white"/>
+    `).join('')}
+    <!-- annotation arrows -->
+    <g opacity="0.85">
+      <line x1="200" y1="104" x2="200" y2="122" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,1"/>
+      <text x="168" y="121" font-family="Inter,sans-serif" font-size="7" fill="#f59e0b">Edit target quarter</text>
+      <line x1="354" y1="155" x2="370" y2="148" stroke="#6c8cff" stroke-width="1" stroke-dasharray="2,1"/>
+      <text x="285" y="147" font-family="Inter,sans-serif" font-size="7" fill="#6c8cff">Toggle on/off</text>
+      <line x1="354" y1="181" x2="370" y2="185" stroke="#f87171" stroke-width="1" stroke-dasharray="2,1"/>
+      <text x="290" y="192" font-family="Inter,sans-serif" font-size="7" fill="#f87171">Disabled (off)</text>
+    </g>
+  </svg>`;
+}
+
+function drawDashboardScreen(){
+  const members = [
+    {name:'Sara Al-Husain', team:'Unify', score:4.1, c:'#3ecf8e', bg:'rgba(62,207,142,0.1)', pct:82, kpi1:'89%', kpi2:'91%'},
+    {name:'Omar Khalil',    team:'Flights', score:3.2, c:'#6c8cff', bg:'rgba(108,140,255,0.1)', pct:64, kpi1:'71%', kpi2:'78%'},
+    {name:'Lina Nassar',   team:'Platform', score:2.6, c:'#f59e0b', bg:'rgba(245,158,11,0.1)', pct:52, kpi1:'65%', kpi2:'73%'},
+  ];
+  return `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" class="help-svg">
+    <rect width="380" height="240" rx="10" fill="#181c27" stroke="#2a2f42" stroke-width="1"/>
+    <rect x="0" y="0" width="380" height="32" rx="10" fill="#1e2330"/>
+    <rect x="0" y="22" width="380" height="10" fill="#1e2330"/>
+    <text x="16" y="18" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#e8eaf0">Team performance</text>
+    <rect x="326" y="8" width="42" height="14" rx="3" fill="#6c8cff"/>
+    <text x="333" y="18" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="white">+ Add</text>
+    <!-- stat chips -->
+    ${[{x:16,v:'3',l:'Total',c:'#e8eaf0'},{x:143,v:'2',l:'Started',c:'#3ecf8e'},{x:270,v:'1',l:'Pending',c:'#f59e0b'}].map(s=>`
+      <rect x="${s.x}" y="38" width="110" height="30" rx="5" fill="#1e2330" stroke="#2a2f42"/>
+      <text x="${s.x+8}" y="50" font-family="Inter,sans-serif" font-size="7" fill="#555d7a">${s.l}</text>
+      <text x="${s.x+8}" y="62" font-family="monospace" font-size="14" font-weight="700" fill="${s.c}">${s.v}</text>
+    `).join('')}
+    <!-- member cards -->
+    ${members.map((m,i)=>{
+      const x=16+(i%3)*122, y=78+(Math.floor(i/3)*0);
+      const initials=m.name.split(' ').map(p=>p[0]).join('').slice(0,2);
+      const acolor=['#6c8cff','#3ecf8e','#f59e0b'][i];
+      return `
+      <rect x="${x}" y="${y}" width="116" height="90" rx="7" fill="#1e2330" stroke="#2a2f42"/>
+      <rect x="${x}" y="${y}" width="116" height="2" rx="1" fill="${m.c}" opacity="0.6"/>
+      <circle cx="${x+18}" cy="${y+18}" r="10" fill="${acolor}22"/>
+      <text x="${x+18}" y="${y+22}" font-family="Inter,sans-serif" font-size="8" font-weight="700" fill="${acolor}" text-anchor="middle">${initials}</text>
+      <text x="${x+32}" y="${y+15}" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#e8eaf0">${m.name.split(' ')[0]}</text>
+      <text x="${x+32}" y="${y+24}" font-family="Inter,sans-serif" font-size="7" fill="#555d7a">${m.team}</text>
+      <rect x="${x+6}" y="${y+32}" width="49" height="20" rx="3" fill="#242838"/>
+      <text x="${x+10}" y="${y+40}" font-family="Inter,sans-serif" font-size="6" fill="#555d7a">Delivery</text>
+      <text x="${x+10}" y="${y+49}" font-family="monospace" font-size="9" font-weight="600" fill="#e8eaf0">${m.kpi1}</text>
+      <rect x="${x+59}" y="${y+32}" width="51" height="20" rx="3" fill="#242838"/>
+      <text x="${x+63}" y="${y+40}" font-family="Inter,sans-serif" font-size="6" fill="#555d7a">Est. acc.</text>
+      <text x="${x+63}" y="${y+49}" font-family="monospace" font-size="9" font-weight="600" fill="#e8eaf0">${m.kpi2}</text>
+      <rect x="${x+6}" y="${y+57}" width="58" height="10" rx="5" fill="${m.bg}" stroke="${m.c}44"/>
+      <text x="${x+10}" y="${y+64}" font-family="monospace" font-size="8" font-weight="600" fill="${m.c}">${m.score}/5</text>
+      <rect x="${x+68}" y="${y+60}" width="42" height="4" rx="2" fill="#242838"/>
+      <rect x="${x+68}" y="${y+60}" width="${42*m.pct/100}" height="4" rx="2" fill="${m.c}"/>
+      <text x="${x+6}" y="${y+84}" font-family="Inter,sans-serif" font-size="7" fill="#555d7a">Click to open scorecard →</text>
+      `;
+    }).join('')}
+    <!-- annotation -->
+    <line x1="74" y1="170" x2="74" y2="185" stroke="#6c8cff" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="16" y="194" font-family="Inter,sans-serif" font-size="7" fill="#6c8cff">Overall score (avg of all dimensions)</text>
+    <line x1="196" y1="148" x2="220" y2="136" stroke="#3ecf8e" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="188" y="133" font-family="Inter,sans-serif" font-size="7" fill="#3ecf8e">Latest checkpoint KPIs</text>
+  </svg>`;
+}
+
+function drawSAScreen(){
+  return `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" class="help-svg">
+    <rect width="380" height="240" rx="10" fill="#181c27" stroke="#2a2f42" stroke-width="1"/>
+    <rect x="0" y="0" width="380" height="30" rx="10" fill="#1e2330"/>
+    <rect x="0" y="20" width="380" height="10" fill="#1e2330"/>
+    <text x="16" y="18" font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="#e8eaf0">Sara Al-Husain</text>
+    <!-- tabs -->
+    <rect x="16" y="34" width="348" height="20" rx="5" fill="#1e2330"/>
+    ${[{x:19,l:'Self-assessment',a:true},{x:109,l:'Scorecard',a:false},{x:181,l:'Overview',a:false},{x:249,l:'Progress',a:false},{x:316,l:'Notes',a:false}].map(t=>`
+      <rect x="${t.x}" y="${t.a?34:36}" width="${t.l.length*5.5+6}" height="${t.a?20:16}" rx="4" fill="${t.a?'#181c27':'transparent'}" stroke="${t.a?'#2a2f42':'none'}"/>
+      <text x="${t.x+5}" y="${t.a?47:47}" font-family="Inter,sans-serif" font-size="7.5" font-weight="${t.a?600:400}" fill="${t.a?'#e8eaf0':'#8b90a8'}">${t.l}</text>
+    `).join('')}
+    <!-- progress bar -->
+    <rect x="16" y="60" width="260" height="4" rx="2" fill="#242838"/>
+    <rect x="16" y="60" width="186" height="4" rx="2" fill="url(#saGrad)"/>
+    <defs><linearGradient id="saGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6c8cff"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs>
+    <text x="282" y="65" font-family="monospace" font-size="7.5" fill="#555d7a">5 / 7 answered</text>
+    <!-- info banner -->
+    <rect x="16" y="70" width="348" height="18" rx="4" fill="#6c8cff11" stroke="#6c8cff33"/>
+    <text x="24" y="81" font-family="Inter,sans-serif" font-size="7.5" fill="#8b90a8">Send to Sara 3–5 days before the meeting, then record answers here.</text>
+    <!-- questions -->
+    ${[
+      {y:94,  q:'What are you most proud of from H1?', ans:'Led the redesign of the booking flow, reduced drop-off by 18%.', done:true},
+      {y:120, q:'Where could you have done better?', ans:'Estimation accuracy was lower than I\'d like — I underestimated 3 tickets.', done:true},
+      {y:146, q:'What blockers impacted your work?', ans:'Waiting on backend API specs delayed 2 features by ~1 week each.', done:true},
+      {y:172, q:'How would you rate your own performance? (1–5)', ans:'', done:false},
+      {y:198, q:'What support do you need in H2?', ans:'', done:false},
+    ].map(r=>`
+      <rect x="16" y="${r.y}" width="348" height="22" rx="5" fill="${r.done?'#1e2330':'#181c27'}" stroke="${r.done?'rgba(62,207,142,0.2)':'#2a2f42'}"/>
+      <rect x="20" y="${r.y+5}" width="20" height="12" rx="2" fill="#242838"/>
+      <text x="22" y="${r.y+13}" font-family="monospace" font-size="7" fill="#555d7a">Q${r.y===94?1:r.y===120?2:r.y===146?3:r.y===172?4:5}</text>
+      <text x="46" y="${r.y+11}" font-family="Inter,sans-serif" font-size="7.5" font-weight="500" fill="#e8eaf0">${r.q}</text>
+      ${r.done?`<text x="46" y="${r.y+20}" font-family="Inter,sans-serif" font-size="7" fill="#8b90a8">${r.ans.slice(0,52)}…</text><circle cx="356" cy="${r.y+11}" r="5" fill="#3ecf8e22" stroke="#3ecf8e66"/><text x="352.5" y="${r.y+14}" font-family="Inter,sans-serif" font-size="7" fill="#3ecf8e">✓</text>`:`<text x="46" y="${r.y+20}" font-family="Inter,sans-serif" font-size="7" fill="#555d7a" font-style="italic">Not answered yet…</text>`}
+    `).join('')}
+  </svg>`;
+}
+
+function drawScorecardScreen(){
+  const rows = [
+    {label:'Velocity & throughput', score:4, hint:''},
+    {label:'Quality of work', score:5, hint:''},
+    {label:'PR reviews', score:3, hint:'Count, quality & turnaround'},
+    {label:'Post-delivery follow-up', score:4, hint:''},
+    {label:'Creativity in problem solving', score:4, hint:''},
+  ];
+  return `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" class="help-svg">
+    <rect width="380" height="240" rx="10" fill="#181c27" stroke="#2a2f42" stroke-width="1"/>
+    <rect x="0" y="0" width="380" height="30" rx="10" fill="#1e2330"/>
+    <rect x="0" y="20" width="380" height="10" fill="#1e2330"/>
+    <text x="16" y="18" font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="#e8eaf0">Sara Al-Husain</text>
+    <rect x="296" y="8" width="70" height="14" rx="7" fill="#3ecf8e18" stroke="#3ecf8e44"/>
+    <text x="304" y="18" font-family="monospace" font-size="10" font-weight="700" fill="#3ecf8e">4.1 / 5</text>
+    <!-- tabs -->
+    <rect x="16" y="34" width="348" height="20" rx="5" fill="#1e2330"/>
+    ${[{x:19,l:'Self-assessment',a:false},{x:109,l:'Scorecard',a:true},{x:181,l:'Overview',a:false},{x:249,l:'Progress',a:false},{x:316,l:'Notes',a:false}].map(t=>`
+      <rect x="${t.x}" y="${t.a?34:36}" width="${t.l.length*5.5+6}" height="${t.a?20:16}" rx="4" fill="${t.a?'#181c27':'transparent'}" stroke="${t.a?'#2a2f42':'none'}"/>
+      <text x="${t.x+5}" y="47" font-family="Inter,sans-serif" font-size="7.5" font-weight="${t.a?600:400}" fill="${t.a?'#e8eaf0':'#8b90a8'}">${t.l}</text>
+    `).join('')}
+    <!-- legend -->
+    <rect x="16" y="58" width="348" height="12" rx="3" fill="transparent"/>
+    ${[{c:'#f87171',l:'1 Below'},{c:'#f59e0b',l:'2 Dev'},{c:'#6c8cff',l:'3 Meets'},{c:'#3ecf8e',l:'4 Exceeds'},{c:'#a78bfa',l:'5 Excep'}].map((lg,i)=>`
+      <circle cx="${20+i*66}" cy="64" r="4" fill="${lg.c}22" stroke="${lg.c}"/>
+      <text x="${28+i*66}" y="67" font-family="Inter,sans-serif" font-size="7" fill="#8b90a8">${lg.l}</text>
+    `).join('')}
+    <!-- cat title -->
+    <text x="16" y="82" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#555d7a" letter-spacing="0.04em">EXECUTION &amp; CRAFT</text>
+    <line x1="16" y1="84" x2="364" y2="84" stroke="#2a2f42" stroke-width="0.5"/>
+    <!-- score rows -->
+    ${rows.map((r,ri)=>{
+      const y = 90+ri*28;
+      const scoreColors=['','#f87171','#f59e0b','#6c8cff','#3ecf8e','#a78bfa'];
+      return `
+      <text x="16" y="${y+9}" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#e8eaf0">${r.label}</text>
+      ${r.hint?`<text x="16" y="${y+18}" font-family="Inter,sans-serif" font-size="7" fill="#555d7a">${r.hint}</text>`:''}
+      ${[1,2,3,4,5].map(n=>`
+        <circle cx="${148+n*18}" cy="${y+9}" r="8" fill="${n===r.score?scoreColors[n]+'22':'transparent'}" stroke="${n===r.score?scoreColors[n]:'#333850'}" stroke-width="1.5"/>
+        <text x="${148+n*18}" y="${y+12}" font-family="monospace" font-size="7.5" font-weight="600" fill="${n===r.score?scoreColors[n]:'#555d7a'}" text-anchor="middle">${n}</text>
+      `).join('')}
+      <rect x="252" y="${y+1}" width="110" height="16" rx="3" fill="#1e2330" stroke="#2a2f42"/>
+      <text x="256" y="${y+11}" font-family="Inter,sans-serif" font-size="7" fill="#555d7a" font-style="italic">${ri===0?'Consistently ahead of plan':''}${ri===1?'2 PRs praised by PM':''}${ri===2?'avg 18h response time':''}${ri===3?'Strong post-launch monitoring':''}</text>
+      <line x1="16" y1="${y+24}" x2="364" y2="${y+24}" stroke="#2a2f42" stroke-width="0.5"/>
+      `;
+    }).join('')}
+    <!-- annotation -->
+    <line x1="166" y1="225" x2="166" y2="215" stroke="#6c8cff" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="118" y="228" font-family="Inter,sans-serif" font-size="7" fill="#6c8cff">Click dot to score (click again to clear)</text>
+    <line x1="307" y1="100" x2="340" y2="92" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="285" y="89" font-family="Inter,sans-serif" font-size="7" fill="#f59e0b">Add specific example</text>
+  </svg>`;
+}
+
+function drawProgressScreen(){
+  const cps = ['Feb','Apr','Jun','Aug'];
+  const scores = [2.8, 3.2, 3.7, 4.1];
+  const colors = ['#f59e0b','#6c8cff','#6c8cff','#3ecf8e'];
+  return `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" class="help-svg">
+    <rect width="380" height="240" rx="10" fill="#181c27" stroke="#2a2f42" stroke-width="1"/>
+    <rect x="0" y="0" width="380" height="30" rx="10" fill="#1e2330"/>
+    <rect x="0" y="20" width="380" height="10" fill="#1e2330"/>
+    <text x="16" y="18" font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="#e8eaf0">Sara Al-Husain · Progress</text>
+    <!-- checkpoint pills -->
+    <rect x="16" y="34" width="348" height="18" rx="5" fill="#1e2330" stroke="#2a2f42"/>
+    <text x="22" y="45" font-family="Inter,sans-serif" font-size="7" font-weight="600" fill="#555d7a" letter-spacing="0.05em">CHECKPOINT</text>
+    ${cps.map((c,i)=>`
+      <rect x="${80+i*62}" y="36" width="38" height="14" rx="7" fill="${i===3?'#6c8cff18':'transparent'}" stroke="${i===3?'#6c8cff':'#333850'}"/>
+      <text x="${80+i*62+19}" y="45" font-family="Inter,sans-serif" font-size="7.5" font-weight="${i===3?600:400}" fill="${i===3?'#6c8cff':'#8b90a8'}" text-anchor="middle">${c}</text>
+    `).join('')}
+    <!-- bar chart -->
+    <rect x="16" y="56" width="348" height="80" rx="6" fill="#1e2330" stroke="#2a2f42"/>
+    <text x="24" y="68" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#e8eaf0">Overall score progression</text>
+    ${scores.map((s,i)=>{
+      const bh = Math.round((s/5)*44);
+      const bx = 38+i*74, by = 126-bh;
+      return `
+        <rect x="${bx}" y="${by}" width="44" height="${bh}" rx="4" fill="${colors[i]}" opacity="${i===3?1:0.5}"/>
+        <text x="${bx+22}" y="${by-4}" font-family="monospace" font-size="8" font-weight="600" fill="${colors[i]}" text-anchor="middle">${s}</text>
+        <text x="${bx+22}" y="138" font-family="Inter,sans-serif" font-size="7.5" fill="${i===3?'#6c8cff':'#555d7a'}" text-anchor="middle">${cps[i]}</text>
+      `;
+    }).join('')}
+    <!-- table -->
+    <rect x="16" y="144" width="348" height="88" rx="6" fill="#1e2330" stroke="#2a2f42"/>
+    <text x="24" y="156" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#e8eaf0">Score by dimension</text>
+    <line x1="16" y1="160" x2="364" y2="160" stroke="#2a2f42" stroke-width="0.5"/>
+    <!-- table header -->
+    <text x="24" y="170" font-family="Inter,sans-serif" font-size="7" fill="#555d7a">Dimension</text>
+    ${cps.map((c,i)=>`<text x="${164+i*40}" y="170" font-family="Inter,sans-serif" font-size="7" fill="#555d7a" text-anchor="middle">${c}</text>`).join('')}
+    <text x="336" y="170" font-family="monospace" font-size="7" font-weight="600" fill="#555d7a">Δ</text>
+    <line x1="16" y1="173" x2="364" y2="173" stroke="#2a2f42" stroke-width="0.5"/>
+    ${[
+      {d:'Velocity',     vals:[3,3,4,4], delta:'+1'},
+      {d:'Quality',      vals:[3,4,4,5], delta:'+2'},
+      {d:'PR reviews',   vals:[2,3,3,4], delta:'+2'},
+      {d:'Comm. verbal', vals:[4,4,4,4], delta:'='},
+      {d:'Innovation',   vals:[2,2,3,4], delta:'+2'},
+    ].map((r,ri)=>{
+      const y=180+ri*11;
+      const dc=r.delta.startsWith('+')?'#3ecf8e':r.delta==='-1'||r.delta==='-2'?'#f87171':'#555d7a';
+      return `
+        <text x="24" y="${y}" font-family="Inter,sans-serif" font-size="7.5" fill="#e8eaf0">${r.d}</text>
+        ${r.vals.map((v,vi)=>`<text x="${164+vi*40}" y="${y}" font-family="monospace" font-size="7.5" fill="${['#f87171','#f59e0b','#6c8cff','#3ecf8e','#a78bfa'][v-1]||'#555d7a'}" text-anchor="middle">${v}</text>`).join('')}
+        <text x="336" y="${y}" font-family="monospace" font-size="7.5" font-weight="600" fill="${dc}">${r.delta}</text>
+        <line x1="16" y1="${y+3}" x2="364" y2="${y+3}" stroke="#2a2f42" stroke-width="0.3"/>
+      `;
+    }).join('')}
+    <!-- annotation -->
+    <line x1="310" y1="126" x2="340" y2="115" stroke="#3ecf8e" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="282" y="112" font-family="Inter,sans-serif" font-size="7" fill="#3ecf8e">Active checkpoint</text>
+    <line x1="336" y1="191" x2="370" y2="183" stroke="#3ecf8e" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="268" y="181" font-family="Inter,sans-serif" font-size="7" fill="#3ecf8e">Δ = change since first</text>
+  </svg>`;
+}
+
+function drawCheckpointScreen(){
+  return `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" class="help-svg">
+    <rect width="380" height="240" rx="10" fill="#181c27" stroke="#2a2f42" stroke-width="1"/>
+    <rect x="0" y="0" width="380" height="30" rx="10" fill="#1e2330"/>
+    <rect x="0" y="20" width="380" height="10" fill="#1e2330"/>
+    <text x="16" y="18" font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="#e8eaf0">Sara Al-Husain</text>
+    <!-- checkpoint bar -->
+    <rect x="16" y="34" width="348" height="28" rx="6" fill="#1e2330" stroke="#2a2f42"/>
+    <text x="24" y="46" font-family="Inter,sans-serif" font-size="7" font-weight="600" fill="#555d7a" letter-spacing="0.05em">CHECKPOINT</text>
+    ${['Feb 2026','Apr 2026','Jun 2026','Aug 2026'].map((l,i)=>`
+      <rect x="${80+i*58}" y="36" width="${l.length*5+6}" height="16" rx="8" fill="${i===3?'#6c8cff18':'transparent'}" stroke="${i===3?'#6c8cff':'#333850'}"/>
+      <text x="${80+i*58+(l.length*5+6)/2}" y="47" font-family="Inter,sans-serif" font-size="7.5" font-weight="${i===3?600:400}" fill="${i===3?'#6c8cff':'#8b90a8'}" text-anchor="middle">${l}</text>
+    `).join('')}
+    <rect x="316" y="36" width="36" height="16" rx="4" fill="#1e2330" stroke="#2a2f42"/>
+    <text x="326" y="47" font-family="Inter,sans-serif" font-size="8" fill="#8b90a8">+ Add</text>
+    <!-- modal overlay -->
+    <rect x="60" y="70" width="260" height="150" rx="10" fill="#181c27" stroke="#2a2f42" stroke-width="1" filter="url(#sh)"/>
+    <defs><filter id="sh"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.5"/></filter></defs>
+    <rect x="60" y="70" width="260" height="36" rx="10" fill="#1e2330"/>
+    <rect x="60" y="96" width="260" height="10" fill="#1e2330"/>
+    <text x="76" y="91" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#e8eaf0">Add checkpoint</text>
+    <rect x="294" y="78" width="16" height="16" rx="3" fill="transparent" stroke="#333850"/>
+    <text x="299" y="89" font-family="Inter,sans-serif" font-size="10" fill="#555d7a">✕</text>
+    <!-- form fields -->
+    <text x="76" y="116" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#8b90a8">Checkpoint name *</text>
+    <rect x="76" y="120" width="208" height="18" rx="4" fill="#1e2330" stroke="#6c8cff" stroke-width="1.5"/>
+    <text x="82" y="132" font-family="Inter,sans-serif" font-size="8" fill="#e8eaf0">August 2026</text>
+    <text x="76" y="152" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#8b90a8">Copy scores from current?</text>
+    <rect x="76" y="156" width="208" height="18" rx="4" fill="#1e2330" stroke="#2a2f42"/>
+    <text x="82" y="168" font-family="Inter,sans-serif" font-size="8" fill="#8b90a8">Copy current scores as starting point</text>
+    <!-- footer buttons -->
+    <line x1="60" y1="186" x2="320" y2="186" stroke="#2a2f42" stroke-width="0.5"/>
+    <rect x="200" y="192" width="60" height="18" rx="4" fill="#6c8cff"/>
+    <text x="211" y="204" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="white">✓  Add</text>
+    <rect x="136" y="192" width="58" height="18" rx="4" fill="transparent" stroke="#333850"/>
+    <text x="152" y="204" font-family="Inter,sans-serif" font-size="8" fill="#8b90a8">Cancel</text>
+    <!-- annotations -->
+    <line x1="82" y1="132" x2="58" y2="148" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="16" y="152" font-family="Inter,sans-serif" font-size="7" fill="#f59e0b">Clear name like</text>
+    <text x="16" y="161" font-family="Inter,sans-serif" font-size="7" fill="#f59e0b">"August 2026"</text>
+    <line x1="130" y1="165" x2="126" y2="178" stroke="#3ecf8e" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="66" y="185" font-family="Inter,sans-serif" font-size="7" fill="#3ecf8e">Optional: pre-fill</text>
+    <text x="66" y="194" font-family="Inter,sans-serif" font-size="7" fill="#3ecf8e">from last session</text>
+  </svg>`;
+}
+
+function drawExportScreen(){
+  return `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" class="help-svg">
+    <rect width="380" height="240" rx="10" fill="#181c27" stroke="#2a2f42" stroke-width="1"/>
+    <rect x="0" y="0" width="380" height="30" rx="10" fill="#1e2330"/>
+    <rect x="0" y="20" width="380" height="10" fill="#1e2330"/>
+    <text x="16" y="18" font-family="Inter,sans-serif" font-size="10" font-weight="600" fill="#e8eaf0">Sara Al-Husain</text>
+    <!-- top bar buttons -->
+    <rect x="168" y="8" width="50" height="14" rx="4" fill="#3ecf8e18" stroke="#3ecf8e44"/>
+    <text x="176" y="18" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#3ecf8e">↓ Export</text>
+    <rect x="222" y="8" width="50" height="14" rx="4" fill="transparent" stroke="#333850"/>
+    <text x="230" y="18" font-family="Inter,sans-serif" font-size="8" font-weight="500" fill="#8b90a8">↑ Import</text>
+    <!-- modal -->
+    <rect x="40" y="40" width="300" height="186" rx="10" fill="#181c27" stroke="#2a2f42" stroke-width="1"/>
+    <rect x="40" y="40" width="300" height="38" rx="10" fill="#1e2330"/>
+    <rect x="40" y="68" width="300" height="10" fill="#1e2330"/>
+    <text x="56" y="60" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#e8eaf0">Export ratings</text>
+    <!-- description -->
+    <text x="56" y="88" font-family="Inter,sans-serif" font-size="8" fill="#8b90a8">Exports all checkpoints for</text>
+    <text x="167" y="88" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#e8eaf0">Sara Al-Husain</text>
+    <text x="56" y="98" font-family="Inter,sans-serif" font-size="8" fill="#8b90a8">as an Excel file. Each checkpoint = one sheet.</text>
+    <!-- what's included box -->
+    <rect x="56" y="106" width="268" height="72" rx="5" fill="#1e2330" stroke="#2a2f42"/>
+    <text x="66" y="120" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#e8eaf0">What's included</text>
+    ${['All KPI values and tracking point scores','Notes per dimension','Overall notes','Self-assessment answers (separate sheet)'].map((t,i)=>`
+      <text x="68" y="${132+i*12}" font-family="Inter,sans-serif" font-size="7.5" fill="#8b90a8">·  ${t}</text>
+    `).join('')}
+    <!-- file icon illustration -->
+    <rect x="252" y="108" width="60" height="68" rx="5" fill="#242838" stroke="#333850"/>
+    <rect x="252" y="108" width="60" height="16" rx="5" fill="#1d7a4a"/>
+    <rect x="252" y="124" width="60" height="4" fill="#1d7a4a"/>
+    <text x="282" y="120" font-family="Inter,sans-serif" font-size="7.5" font-weight="700" fill="white" text-anchor="middle">XLSX</text>
+    ${['Feb 2026','Apr 2026','Jun 2026','Aug 2026','Self-assess'].map((s,i)=>`
+      <rect x="258" y="${132+i*8}" width="48" height="6" rx="2" fill="#333850"/>
+      <text x="260" y="${137+i*8}" font-family="Inter,sans-serif" font-size="6" fill="#8b90a8">${s}</text>
+    `).join('')}
+    <!-- buttons -->
+    <line x1="40" y1="196" x2="340" y2="196" stroke="#2a2f42" stroke-width="0.5"/>
+    <rect x="196" y="202" width="130" height="18" rx="4" fill="#3ecf8e18" stroke="#3ecf8e44"/>
+    <text x="215" y="214" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#3ecf8e">↓  Download Excel</text>
+    <rect x="126" y="202" width="64" height="18" rx="4" fill="transparent" stroke="#333850"/>
+    <text x="142" y="214" font-family="Inter,sans-serif" font-size="8" fill="#8b90a8">Cancel</text>
+    <!-- annotations -->
+    <line x1="218" y1="22" x2="218" y2="36" stroke="#3ecf8e" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="172" y="35" font-family="Inter,sans-serif" font-size="7" fill="#3ecf8e">Opens export modal</text>
+    <line x1="248" y1="22" x2="248" y2="36" stroke="#8b90a8" stroke-width="1" stroke-dasharray="2,1"/>
+    <text x="232" y="35" font-family="Inter,sans-serif" font-size="7" fill="#8b90a8">Upload .xlsx</text>
+  </svg>`;
+}
+['addModal','addCpModal','editTpModal','exportModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){['addModal','addCpModal','editTpModal','exportModal'].forEach(id=>document.getElementById(id).classList.remove('open'));}
+  if(e.key==='Enter'&&!e.shiftKey&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='SELECT'){
+    if(document.getElementById('addModal').classList.contains('open'))addMember();
+    if(document.getElementById('addCpModal').classList.contains('open'))addCheckpoint();
+    if(document.getElementById('editTpModal').classList.contains('open'))saveEditTp();
+  }
+});
+
+// ── BOOT ─────────────────────────────────────────────────────────
+load();
+renderSetup();
+renderSidebar();
+</script>
+</body>
+</html>
